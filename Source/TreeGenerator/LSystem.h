@@ -3,17 +3,17 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "GameFramework/Actor.h"
+#include "Components/ActorComponent.h"
 #include "Rule.h"
 #include "LSystem.generated.h"
 
-UCLASS()
-class TREEGENERATOR_API ALSystem : public AActor
+UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
+class TREEGENERATOR_API ULSystem : public UActorComponent
 {
 	GENERATED_BODY()
 	
 public:	
-	ALSystem();
+	ULSystem();
 
 	UFUNCTION(BlueprintCallable)
 	void Init();

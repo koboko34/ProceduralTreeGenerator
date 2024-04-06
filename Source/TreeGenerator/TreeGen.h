@@ -7,8 +7,13 @@
 #include "TreeGen.generated.h"
 
 UCLASS()
-class TREEGENERATOR_API ATreeGen : public ALSystem
+class TREEGENERATOR_API ATreeGen : public AActor
 {
 	GENERATED_BODY()
-	
+
+	ATreeGen();
+
+public:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	ULSystem* LSystem;
 };

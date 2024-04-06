@@ -2,13 +2,13 @@
 
 #include "LSystem.h"
 
-ALSystem::ALSystem()
+ULSystem::ULSystem()
 {
-	PrimaryActorTick.bCanEverTick = false;
-	PrimaryActorTick.bStartWithTickEnabled = false;
+	PrimaryComponentTick.bCanEverTick = false;
+	PrimaryComponentTick.bStartWithTickEnabled = false;
 }
 
-void ALSystem::Init()
+void ULSystem::Init()
 {
 	if (ProductionRules.Num() == 0)
 	{
@@ -25,7 +25,7 @@ void ALSystem::Init()
 	}
 }
 
-void ALSystem::Evolve()
+void ULSystem::Evolve()
 {	
 	FString NextString = "";
 
@@ -42,7 +42,7 @@ void ALSystem::Evolve()
 	CurrentString = NextString;
 }
 
-FString ALSystem::ApplyRule(FString c)
+FString ULSystem::ApplyRule(FString c)
 {	
 	for (const FRule& Rule : ProductionRules)
 	{
