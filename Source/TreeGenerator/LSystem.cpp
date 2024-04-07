@@ -16,8 +16,9 @@ void ULSystem::Init()
 		return;
 	}
 
+	ProcessAlphabet();
+
 	CurrentString = Axiom;
-	CurrentAngle = Angle;
 
 	for (int i = 0; i < Generation; i++)
 	{
@@ -54,4 +55,19 @@ FString ULSystem::ApplyRule(FString c)
 
 	UE_LOG(LogTemp, Warning, TEXT("Could not find rule for: %s"), *c);
 	return "?";
+}
+
+void ULSystem::ProcessAlphabet()
+{
+	for (const FRule& Rule : ProductionRules)
+	{
+		Alphabet.AddUnique(Rule.Element);
+
+		for (size_t i = 0; i < Rule.ProductionRule.Len(); i++)
+		{
+			FString Char = Rule.ProductionRule.Mid(i, 1);
+			Alphabet.AddUnique(Char);
+		}
+	}
+	Alphabet.Sort();
 }
