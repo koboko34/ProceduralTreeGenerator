@@ -7,6 +7,9 @@
 #include "Branch.h"
 #include "TreeGen.generated.h"
 
+class USplineComponent;
+class USplineMeshComponent;
+
 UCLASS()
 class TREEGENERATOR_API ATreeGen : public AActor
 {
@@ -15,13 +18,16 @@ class TREEGENERATOR_API ATreeGen : public AActor
 	ATreeGen();
 
 public:
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
 	USceneComponent* Root;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
 	USceneComponent* Turtle;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	ULSystem* LSystem;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	USplineComponent* Spline;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float Length = 50.f;
@@ -30,11 +36,21 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	float CurrentAngle = 0.f;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
+	UStaticMesh* MeshForSplines;
+
 private:
-	UPROPERTY(VisibleAnywhere, meta = (AllowPrivateAccess = true))
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = true))
 	TArray<FBranch> Tree;
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = true))
+	TArray<USplineMeshComponent*> SplineMeshes;
 
 public:
 	UFUNCTION(BlueprintCallable)
 	void GenerateTree();
+	UFUNCTION(BlueprintCallable)
+	void GenerateSplines();
+
+private:
+	TArray<FVector> TransformsToVectors(TArray<FTransform>& Transforms) const;
 };

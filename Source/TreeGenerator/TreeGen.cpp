@@ -2,6 +2,8 @@
 
 
 #include "TreeGen.h"
+#include "Components/SplineComponent.h"
+#include "Components/SplineMeshComponent.h"
 
 #include "Kismet/KismetSystemLibrary.h"
 #include "DrawDebugHelpers.h"
@@ -15,6 +17,8 @@ ATreeGen::ATreeGen()
 	SetRootComponent(Root);
 	Turtle = CreateDefaultSubobject<USceneComponent>("Turtle");
 	Turtle->SetupAttachment(RootComponent);
+	Spline = CreateDefaultSubobject<USplineComponent>("Spline");
+	Spline->SetupAttachment(RootComponent);
 	LSystem = CreateDefaultSubobject<ULSystem>("LSystem");
 
 	// UKismetSystemLibrary::FlushPersistentDebugLines(this);
@@ -65,4 +69,60 @@ void ATreeGen::GenerateTree()
 			break;
 		}
 	}
+}
+
+void ATreeGen::GenerateSplines()
+{
+	for (USplineMeshComponent* SplineMesh : SplineMeshes)
+	{
+		if (SplineMesh)
+		{
+			SplineMesh->DestroyComponent();
+		}
+	}
+	SplineMeshes.Empty();
+	Spline->ClearSplinePoints();
+	
+	for (FBranch& Branch : Tree)
+	{
+		Spline->SetSplinePoints(TransformsToVectors(Branch.Points), ESplineCoordinateSpace::Local);
+		for (int i = 0; i < Spline->GetNumberOfSplinePoints() - 2; i++)
+		{
+			USplineMeshComponent* SplineMesh = NewObject<USplineMeshComponent>(this, USplineMeshComponent::StaticClass());
+			if (SplineMesh)
+			{
+				SplineMesh->AttachToComponent(Spline, FAttachmentTransformRules::KeepRelativeTransform);
+				SplineMesh->RegisterComponent();
+
+				if (MeshForSplines)
+				{
+					SplineMesh->SetStaticMesh(MeshForSplines);
+				}
+				else
+				{
+					UE_LOG(LogTemp, Warning, TEXT("Spline static mesh not set!"));
+				}
+
+				SplineMesh->SetForwardAxis(ESplineMeshAxis::Z, false);
+				AddInstanceComponent(SplineMesh);
+
+				FVector StartLocation, StartTangent, EndLocation, EndTangent;
+				Spline->GetLocationAndTangentAtSplinePoint(i, StartLocation, StartTangent, ESplineCoordinateSpace::Local);
+				Spline->GetLocationAndTangentAtSplinePoint(i + 1, EndLocation, EndTangent, ESplineCoordinateSpace::Local);
+				SplineMesh->SetStartAndEnd(StartLocation, StartTangent, EndLocation, EndTangent);
+
+				SplineMeshes.Add(SplineMesh);
+			}
+		}
+	}
+}
+
+TArray<FVector> ATreeGen::TransformsToVectors(TArray<FTransform>& Transforms) const
+{
+	TArray<FVector> Vectors;
+	for (FTransform& Transform : Transforms)
+	{
+		Vectors.Add(Transform.GetLocation());
+	}
+	return Vectors;
 }

@@ -17,6 +17,6 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	FString ProductionRule = "";
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (ClampMin = 0.f, ClampMax = 1.f, UIMin = 0.f, UIMax = 1.f))
 	float Chance = 1.f;
 };
