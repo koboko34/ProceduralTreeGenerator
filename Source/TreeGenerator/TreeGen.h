@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "LSystem.h"
 #include "Branch.h"
+#include "RandomNumberGenerator.h"
 #include "TreeGen.generated.h"
 
 class USplineComponent;
@@ -30,6 +31,8 @@ public:
 	USplineComponent* Spline;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	bool bUseRandom = false;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float Length = 50.f;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float Angle = 25.f;
@@ -44,6 +47,9 @@ private:
 	TArray<FBranch> Tree;
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = true))
 	TArray<USplineMeshComponent*> SplineMeshes;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = true))
+	URandomNumberGenerator* RandomNumberGenerator;
 
 public:
 	UFUNCTION(BlueprintCallable)

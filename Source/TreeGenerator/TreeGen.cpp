@@ -19,7 +19,9 @@ ATreeGen::ATreeGen()
 	Turtle->SetupAttachment(RootComponent);
 	Spline = CreateDefaultSubobject<USplineComponent>("Spline");
 	Spline->SetupAttachment(RootComponent);
+
 	LSystem = CreateDefaultSubobject<ULSystem>("LSystem");
+	RandomNumberGenerator = CreateDefaultSubobject<URandomNumberGenerator>("RandomNumberGenerator");
 
 	// UKismetSystemLibrary::FlushPersistentDebugLines(this);
 }
