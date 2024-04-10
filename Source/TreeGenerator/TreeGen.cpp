@@ -68,10 +68,12 @@ void ATreeGen::GenerateTree()
 			
 			Tree.AddDefaulted();
 			Tree[Tree.Num() - 1].ParentIndex = CurrentBranchIndex;
-			Tree[Tree.Num() - 1].ParentWidthScale = CurrentWidthScale * BranchingWidthScaleFactor;
-			Tree[Tree.Num() - 1].ParentLengthScale = CurrentLengthScale * BranchingLengthFactor;
+			Tree[Tree.Num() - 1].ParentWidthScale = CurrentWidthScale;
+			Tree[Tree.Num() - 1].ParentLengthScale = CurrentLengthScale;
 			Tree[Tree.Num() - 1].Points.Add(Turtle->GetRelativeTransform());
 			CurrentBranchIndex = Tree.Num() - 1;
+			CurrentWidthScale *= BranchingWidthScaleFactor;
+			CurrentLengthScale *= BranchingLengthFactor;
 			break;
 		case ']':
 			if (CurrentWidthScale < MinWidthScale && OpenBranchesToIgnore > 0)
@@ -81,8 +83,8 @@ void ATreeGen::GenerateTree()
 			}
 			
 			Turtle->SetRelativeTransform(Tree[CurrentBranchIndex].Points[0]);
-			CurrentWidthScale = Tree[CurrentBranchIndex].ParentWidthScale / BranchingWidthScaleFactor;
-			CurrentLengthScale = Tree[CurrentBranchIndex].ParentLengthScale / BranchingLengthFactor;
+			CurrentWidthScale = Tree[CurrentBranchIndex].ParentWidthScale;
+			CurrentLengthScale = Tree[CurrentBranchIndex].ParentLengthScale;
 			CurrentBranchIndex = Tree[CurrentBranchIndex].ParentIndex;
 			break;
 		case 'F':
@@ -131,6 +133,11 @@ void ATreeGen::GenerateSplines()
 	
 	for (FBranch& Branch : Tree)
 	{
+		if (Branch.Points.Num() <= 2)
+		{
+			continue;
+		}
+		
 		float CurrentWidthScale = Branch.ParentWidthScale;
 
 		// Temporary fix for spline folding in on itself on first set of points
