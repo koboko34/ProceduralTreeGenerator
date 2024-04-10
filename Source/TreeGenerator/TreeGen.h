@@ -38,7 +38,7 @@ public:
 	int RandomAngleMax = 25;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	int BranchRollMax = 137;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (ClampMin = 0, ClampMax = 1, UIMin = 0, UIMax = 1))
 	float MinWidthScale = 0.1f;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float WidthScaleFactor = 0.9f;

@@ -25,11 +25,10 @@ ATreeGen::ATreeGen()
 
 void ATreeGen::GenerateTree()
 {
-	Tree.Empty();
 	Turtle->SetRelativeLocationAndRotation(FVector::ZeroVector, FRotator::ZeroRotator);
-	
 	Turtle->AddLocalRotation(FRotator(90.f, 0.f, 0.f));
 
+	Tree.Empty();
 	Tree.AddDefaulted();
 	Tree[0].Points.Add(Turtle->GetRelativeTransform());
 
@@ -38,6 +37,7 @@ void ATreeGen::GenerateTree()
 		DrawDebugSphere(GetWorld(), Turtle->GetComponentLocation(), 12, 6, FColor::Green, false, 10.f);
 	}
 
+	int OpenBranchesToIgnore = 0;
 	int CurrentBranchIndex = 0;
 	float CurrentWidthScale = 1.f;
 	for (size_t i = 0; i < LSystem->CurrentString.Len(); i++)
@@ -55,6 +55,7 @@ void ATreeGen::GenerateTree()
 		case '[':
 			if (CurrentWidthScale < MinWidthScale)
 			{
+				OpenBranchesToIgnore++;
 				break;
 			}
 			
@@ -71,6 +72,12 @@ void ATreeGen::GenerateTree()
 			CurrentBranchIndex = Tree.Num() - 1;
 			break;
 		case ']':
+			if (CurrentWidthScale < MinWidthScale && OpenBranchesToIgnore > 0)
+			{
+				OpenBranchesToIgnore--;
+				break;
+			}
+			
 			Turtle->SetRelativeTransform(Tree[CurrentBranchIndex].Points[0]);
 			CurrentWidthScale = Tree[CurrentBranchIndex].ParentWidthScale / BranchingWidthScaleFactor;
 			CurrentBranchIndex = Tree[CurrentBranchIndex].ParentIndex;
@@ -122,7 +129,16 @@ void ATreeGen::GenerateSplines()
 	for (FBranch& Branch : Tree)
 	{
 		float CurrentWidthScale = Branch.ParentWidthScale;
-		Spline->SetSplinePoints(TransformsToVectors(Branch.Points), ESplineCoordinateSpace::Local);
+
+		// Temporary fix for spline folding in on itself on first set of points
+		TArray<FTransform>& TempArray = Branch.Points;
+		if (Branch.ParentIndex == -1)
+		{
+			TempArray.RemoveAt(0);
+		}
+
+		//Spline->SetSplinePoints(TransformsToVectors(Branch.Points), ESplineCoordinateSpace::Local);
+		Spline->SetSplinePoints(TransformsToVectors(TempArray), ESplineCoordinateSpace::Local);
 
 		for (int i = 0; i < Spline->GetNumberOfSplinePoints() - 1; i++)
 		{
