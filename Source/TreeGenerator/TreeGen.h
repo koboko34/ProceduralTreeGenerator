@@ -34,20 +34,39 @@ public:
 	bool bShowDebug = false;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	bool bUseRandom = false;
+
+	// Max amount in degrees to apply random rotation on all axes when going forward.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (ClampMin = 0, ClampMax = 180, UIMin = 0, UIMax = 180))
 	int RandomAngleMax = 25;
+
+	// Max amount in degrees to apply random rotation on Roll axis when branching.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	int BranchRollMax = 137;
+
+	// Minimum width allowed for branch segments. Each segments smaller than this will not produce a spline mesh.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (ClampMin = 0, ClampMax = 1, UIMin = 0, UIMax = 1))
 	float MinWidthScale = 0.1f;
+
+	// Scales width by this amount when going forward.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float WidthScaleFactor = 0.9f;
+
+	// Scales width by this amount when creating new branch.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float BranchingWidthScaleFactor = 0.5f;
+
+	// Scales length by this amount when creating new branch.
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float BranchingLengthFactor = 0.7f;
+
+	// Length by which each forward step should travel.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float Length = 50.f;
+
+	// Angle by which to rotate Yaw on '+' and '-'.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float Angle = 25.f;
+
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	float CurrentAngle = 0.f;
 

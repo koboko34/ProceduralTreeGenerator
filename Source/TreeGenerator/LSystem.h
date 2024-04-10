@@ -19,14 +19,23 @@ public:
 	void Init();
 
 public:
+	// String to begin with at generation 0
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	FString Axiom = "";
+
+	// Number of generations to process string
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	int Generation = 1;
+
+	// Set of production rules
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TArray<FRule> ProductionRules;
+
+	// Resulting string after all generations have been processed
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	FString CurrentString;
+
+	// Set of characters used
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	TArray<FString> Alphabet;
 
