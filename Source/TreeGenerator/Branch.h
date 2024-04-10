@@ -15,5 +15,8 @@ public:
 	TArray<FTransform> Points;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float ParentWidthScale = 1.f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	int ParentIndex = -1;
 };

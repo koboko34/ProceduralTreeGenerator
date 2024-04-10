@@ -31,7 +31,19 @@ public:
 	USplineComponent* Spline;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	bool bShowDebug = false;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	bool bUseRandom = false;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (ClampMin = 0, ClampMax = 180, UIMin = 0, UIMax = 180))
+	int RandomAngleMax = 25;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	int BranchRollMax = 137;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float MinWidthScale = 0.1f;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float WidthScaleFactor = 0.9f;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float BranchingWidthScaleFactor = 0.5f;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float Length = 50.f;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)

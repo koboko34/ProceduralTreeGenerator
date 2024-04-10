@@ -5,7 +5,6 @@
 #include "Components/SplineComponent.h"
 #include "Components/SplineMeshComponent.h"
 
-#include "Kismet/KismetSystemLibrary.h"
 #include "DrawDebugHelpers.h"
 
 ATreeGen::ATreeGen()
@@ -22,8 +21,6 @@ ATreeGen::ATreeGen()
 
 	LSystem = CreateDefaultSubobject<ULSystem>("LSystem");
 	RandomNumberGenerator = CreateDefaultSubobject<URandomNumberGenerator>("RandomNumberGenerator");
-
-	// UKismetSystemLibrary::FlushPersistentDebugLines(this);
 }
 
 void ATreeGen::GenerateTree()
@@ -36,11 +33,15 @@ void ATreeGen::GenerateTree()
 	Tree.AddDefaulted();
 	Tree[0].Points.Add(Turtle->GetRelativeTransform());
 
-	DrawDebugSphere(GetWorld(), Turtle->GetComponentLocation(), 12, 6, FColor::Green, false, 10.f);
+	if (bShowDebug)
+	{
+		DrawDebugSphere(GetWorld(), Turtle->GetComponentLocation(), 12, 6, FColor::Green, false, 10.f);
+	}
 
 	int CurrentBranchIndex = 0;
+	float CurrentWidthScale = 1.f;
 	for (size_t i = 0; i < LSystem->CurrentString.Len(); i++)
-	{
+	{		
 		auto Char = LSystem->CurrentString[i];
 
 		switch (Char)
@@ -52,20 +53,52 @@ void ATreeGen::GenerateTree()
 			Turtle->AddLocalRotation(FRotator(0.f, Angle, 0.f));
 			break;
 		case '[':
+			if (CurrentWidthScale < MinWidthScale)
+			{
+				break;
+			}
+			
+			if (bUseRandom && BranchRollMax != 0)
+			{
+				int RandBranchRoll = (RandomNumberGenerator->GenerateNumber() % BranchRollMax) * 2 - BranchRollMax;
+				Turtle->AddLocalRotation(FRotator(0.f, 0.f, RandBranchRoll));
+			}
+			
 			Tree.AddDefaulted();
 			Tree[Tree.Num() - 1].ParentIndex = CurrentBranchIndex;
+			Tree[Tree.Num() - 1].ParentWidthScale = CurrentWidthScale * BranchingWidthScaleFactor;
 			Tree[Tree.Num() - 1].Points.Add(Turtle->GetRelativeTransform());
 			CurrentBranchIndex = Tree.Num() - 1;
 			break;
 		case ']':
 			Turtle->SetRelativeTransform(Tree[CurrentBranchIndex].Points[0]);
+			CurrentWidthScale = Tree[CurrentBranchIndex].ParentWidthScale / BranchingWidthScaleFactor;
 			CurrentBranchIndex = Tree[CurrentBranchIndex].ParentIndex;
 			break;
 		case 'F':
+			if (CurrentWidthScale < MinWidthScale)
+			{
+				break;
+			}
+			
 			Turtle->AddRelativeLocation(Turtle->GetForwardVector() * Length);
 			Tree[CurrentBranchIndex].Points.Add(Turtle->GetRelativeTransform());
+			CurrentWidthScale *= WidthScaleFactor;
 
-			DrawDebugSphere(GetWorld(), Turtle->GetComponentLocation(), 12, 4, FColor::Green, false, 10.f);
+			if (bUseRandom && RandomAngleMax != 0)
+			{
+				int RandPitch = (RandomNumberGenerator->GenerateNumber() % RandomAngleMax) * 2 - RandomAngleMax;
+				int RandYaw = (RandomNumberGenerator->GenerateNumber() % RandomAngleMax) * 2 - RandomAngleMax;
+				int RandRoll = (RandomNumberGenerator->GenerateNumber() % RandomAngleMax) * 2 - RandomAngleMax;
+
+				Turtle->AddLocalRotation(FRotator(RandPitch, RandYaw, RandRoll));
+			}
+
+			if (bShowDebug)
+			{
+				DrawDebugSphere(GetWorld(), Turtle->GetComponentLocation(), 12, 4, FColor::Green, false, 10.f);
+			}
+
 			break;
 		case 'X':
 			break;
@@ -83,12 +116,15 @@ void ATreeGen::GenerateSplines()
 		}
 	}
 	SplineMeshes.Empty();
+
 	Spline->ClearSplinePoints();
 	
 	for (FBranch& Branch : Tree)
 	{
+		float CurrentWidthScale = Branch.ParentWidthScale;
 		Spline->SetSplinePoints(TransformsToVectors(Branch.Points), ESplineCoordinateSpace::Local);
-		for (int i = 0; i < Spline->GetNumberOfSplinePoints() - 2; i++)
+
+		for (int i = 0; i < Spline->GetNumberOfSplinePoints() - 1; i++)
 		{
 			USplineMeshComponent* SplineMesh = NewObject<USplineMeshComponent>(this, USplineMeshComponent::StaticClass());
 			if (SplineMesh)
@@ -106,12 +142,16 @@ void ATreeGen::GenerateSplines()
 				}
 
 				SplineMesh->SetForwardAxis(ESplineMeshAxis::Z, false);
-				AddInstanceComponent(SplineMesh);
+				//AddInstanceComponent(SplineMesh);
 
 				FVector StartLocation, StartTangent, EndLocation, EndTangent;
 				Spline->GetLocationAndTangentAtSplinePoint(i, StartLocation, StartTangent, ESplineCoordinateSpace::Local);
 				Spline->GetLocationAndTangentAtSplinePoint(i + 1, EndLocation, EndTangent, ESplineCoordinateSpace::Local);
 				SplineMesh->SetStartAndEnd(StartLocation, StartTangent, EndLocation, EndTangent);
+
+				SplineMesh->SetStartScale(FVector2D(CurrentWidthScale));
+				CurrentWidthScale *= WidthScaleFactor;
+				SplineMesh->SetEndScale(FVector2D(CurrentWidthScale));
 
 				SplineMeshes.Add(SplineMesh);
 			}
