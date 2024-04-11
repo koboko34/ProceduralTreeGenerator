@@ -27,6 +27,7 @@ void ATreeGen::GenerateTree()
 {
 	Turtle->SetRelativeLocationAndRotation(FVector::ZeroVector, FRotator::ZeroRotator);
 	Turtle->AddLocalRotation(FRotator(90.f, 0.f, 0.f));
+	Turtle->AddRelativeLocation(Turtle->GetForwardVector() * -(Length + 10));
 
 	Tree.Empty();
 	Tree.AddDefaulted();
@@ -140,15 +141,17 @@ void ATreeGen::GenerateSplines()
 		
 		float CurrentWidthScale = Branch.ParentWidthScale;
 
+
 		// Temporary fix for spline folding in on itself on first set of points
 		TArray<FTransform>& TempArray = Branch.Points;
 		if (Branch.ParentIndex == -1)
 		{
 			TempArray.RemoveAt(0);
 		}
+		
 
-		//Spline->SetSplinePoints(TransformsToVectors(Branch.Points), ESplineCoordinateSpace::Local);
 		Spline->SetSplinePoints(TransformsToVectors(TempArray), ESplineCoordinateSpace::Local);
+		//Spline->SetSplinePoints(TransformsToVectors(Branch.Points), ESplineCoordinateSpace::Local);
 
 		for (int i = 0; i < Spline->GetNumberOfSplinePoints() - 1; i++)
 		{
@@ -166,7 +169,7 @@ void ATreeGen::GenerateSplines()
 				{
 					UE_LOG(LogTemp, Warning, TEXT("Spline static mesh not set!"));
 				}
-
+				
 				SplineMesh->SetForwardAxis(ESplineMeshAxis::Z, false);
 				//AddInstanceComponent(SplineMesh);
 
@@ -175,9 +178,23 @@ void ATreeGen::GenerateSplines()
 				Spline->GetLocationAndTangentAtSplinePoint(i + 1, EndLocation, EndTangent, ESplineCoordinateSpace::Local);
 				SplineMesh->SetStartAndEnd(StartLocation, StartTangent, EndLocation, EndTangent);
 
-				SplineMesh->SetStartScale(FVector2D(CurrentWidthScale));
-				CurrentWidthScale *= WidthScaleFactor;
-				SplineMesh->SetEndScale(FVector2D(CurrentWidthScale));
+				// close branch on itself by setting scale over the last two spline meshes
+				if (i == Spline->GetNumberOfSplinePoints() - 3)
+				{
+					SplineMesh->SetStartScale(FVector2D(CurrentWidthScale));
+					SplineMesh->SetEndScale(FVector2D(CurrentWidthScale / 2.f));
+				}
+				else if (i == Spline->GetNumberOfSplinePoints() - 2)
+				{
+					SplineMesh->SetStartScale(FVector2D(CurrentWidthScale / 2.f));
+					SplineMesh->SetEndScale(FVector2D(0.f));
+				}
+				else
+				{
+					SplineMesh->SetStartScale(FVector2D(CurrentWidthScale));
+					CurrentWidthScale *= WidthScaleFactor;
+					SplineMesh->SetEndScale(FVector2D(CurrentWidthScale));
+				}
 
 				SplineMeshes.Add(SplineMesh);
 			}
