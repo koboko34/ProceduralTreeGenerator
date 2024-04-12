@@ -6,6 +6,7 @@
 #include "Components/SplineMeshComponent.h"
 
 #include "DrawDebugHelpers.h"
+#include "Timer.h"
 
 ATreeGen::ATreeGen()
 {
@@ -25,6 +26,8 @@ ATreeGen::ATreeGen()
 
 void ATreeGen::GenerateTree()
 {
+	Timer FunctionTimer("GenerateTree()");
+	
 	Turtle->SetRelativeLocationAndRotation(FVector::ZeroVector, FRotator::ZeroRotator);
 	Turtle->AddLocalRotation(FRotator(90.f, 0.f, 0.f));
 	Turtle->AddRelativeLocation(Turtle->GetForwardVector() * -(Length + 10));
@@ -121,6 +124,8 @@ void ATreeGen::GenerateTree()
 
 void ATreeGen::GenerateSplines()
 {
+	Timer FunctionTimer("GenerateSplines");
+	
 	for (USplineMeshComponent* SplineMesh : SplineMeshes)
 	{
 		if (SplineMesh)

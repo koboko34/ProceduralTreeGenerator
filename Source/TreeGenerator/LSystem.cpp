@@ -2,6 +2,8 @@
 
 #include "LSystem.h"
 
+#include "Timer.h"
+
 ULSystem::ULSystem()
 {
 	PrimaryComponentTick.bCanEverTick = false;
@@ -10,6 +12,8 @@ ULSystem::ULSystem()
 
 void ULSystem::Init()
 {
+	Timer FunctionTimer("L-system Init()");
+	
 	if (ProductionRules.Num() == 0)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("L-system %s has no production rules!"), *GetName());
