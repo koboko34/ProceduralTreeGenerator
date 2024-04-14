@@ -59,6 +59,10 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float BranchingLengthFactor = 0.7f;
 
+	// Threshold length past which twigs can spawn.
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float TwigStartThreshold = 300.f;
+
 	// Length by which each forward step should travel.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float Length = 50.f;
@@ -72,12 +76,16 @@ public:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
 	UStaticMesh* MeshForSplines;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
+	UStaticMesh* TwigMesh;
 
 private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = true))
 	TArray<FBranch> Tree;
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = true))
 	TArray<USplineMeshComponent*> SplineMeshes;
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = true))
+	TArray<UStaticMesh*> TwigMeshes;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = true))
 	URandomNumberGenerator* RandomNumberGenerator;

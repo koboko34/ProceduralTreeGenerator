@@ -19,5 +19,7 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float ParentLengthScale = 1.f;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float TotalLength = 0.f;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	int ParentIndex = -1;
 };

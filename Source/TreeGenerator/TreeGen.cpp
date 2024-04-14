@@ -28,9 +28,10 @@ void ATreeGen::GenerateTree()
 {
 	Timer FunctionTimer("GenerateTree()");
 	
+	float NegativeHeightOffset = Length + 10;
 	Turtle->SetRelativeLocationAndRotation(FVector::ZeroVector, FRotator::ZeroRotator);
 	Turtle->AddLocalRotation(FRotator(90.f, 0.f, 0.f));
-	Turtle->AddRelativeLocation(Turtle->GetForwardVector() * -(Length + 10));
+	Turtle->AddRelativeLocation(Turtle->GetForwardVector() * -NegativeHeightOffset);
 
 	Tree.Empty();
 	Tree.AddDefaulted();
@@ -45,6 +46,10 @@ void ATreeGen::GenerateTree()
 	int CurrentBranchIndex = 0;
 	float CurrentWidthScale = 1.f;
 	float CurrentLengthScale = 1.f;
+	float CurrentTotalLength = -NegativeHeightOffset;
+
+	// Temp variable used when rotating values
+	float BranchTotalLength = 0.f;
 	for (size_t i = 0; i < LSystem->CurrentString.Len(); i++)
 	{		
 		auto Char = LSystem->CurrentString[i];
@@ -74,6 +79,7 @@ void ATreeGen::GenerateTree()
 			Tree[Tree.Num() - 1].ParentIndex = CurrentBranchIndex;
 			Tree[Tree.Num() - 1].ParentWidthScale = CurrentWidthScale;
 			Tree[Tree.Num() - 1].ParentLengthScale = CurrentLengthScale;
+			Tree[Tree.Num() - 1].TotalLength = CurrentTotalLength;
 			Tree[Tree.Num() - 1].Points.Add(Turtle->GetRelativeTransform());
 			CurrentBranchIndex = Tree.Num() - 1;
 			CurrentWidthScale *= BranchingWidthScaleFactor;
@@ -89,6 +95,9 @@ void ATreeGen::GenerateTree()
 			Turtle->SetRelativeTransform(Tree[CurrentBranchIndex].Points[0]);
 			CurrentWidthScale = Tree[CurrentBranchIndex].ParentWidthScale;
 			CurrentLengthScale = Tree[CurrentBranchIndex].ParentLengthScale;
+			BranchTotalLength = CurrentTotalLength;
+			CurrentTotalLength = Tree[CurrentBranchIndex].TotalLength;
+			Tree[CurrentBranchIndex].TotalLength = BranchTotalLength;
 			CurrentBranchIndex = Tree[CurrentBranchIndex].ParentIndex;
 			break;
 		case 'F':
@@ -100,6 +109,7 @@ void ATreeGen::GenerateTree()
 			Turtle->AddRelativeLocation(Turtle->GetForwardVector() * Length * CurrentLengthScale);
 			Tree[CurrentBranchIndex].Points.Add(Turtle->GetRelativeTransform());
 			CurrentWidthScale *= WidthScaleFactor;
+			CurrentTotalLength += Length * CurrentLengthScale;
 
 			if (bUseRandom && RandomAngleMax != 0)
 			{
@@ -113,6 +123,11 @@ void ATreeGen::GenerateTree()
 			if (bShowDebug)
 			{
 				DrawDebugSphere(GetWorld(), Turtle->GetComponentLocation(), 12, 4, FColor::Green, false, 10.f);
+
+				if (CurrentTotalLength >= TwigStartThreshold)
+				{
+					DrawDebugSphere(GetWorld(), Turtle->GetComponentLocation(), 20, 4, FColor::Red, false, 10.f);
+				}
 			}
 
 			break;
