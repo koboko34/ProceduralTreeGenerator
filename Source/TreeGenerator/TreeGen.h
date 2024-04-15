@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "LSystem.h"
 #include "Branch.h"
+#include "Twig.h"
 #include "RandomNumberGenerator.h"
 #include "TreeGen.generated.h"
 
@@ -83,9 +84,12 @@ private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = true))
 	TArray<FBranch> Tree;
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = true))
-	TArray<USplineMeshComponent*> SplineMeshes;
+	TArray<USplineMeshComponent*> TreeMeshes;
+
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = true))
-	TArray<UStaticMesh*> TwigMeshes;
+	TArray<FTwig> TwigPoints;
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = true))
+	TArray<USplineMeshComponent*> TwigMeshes;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = true))
 	URandomNumberGenerator* RandomNumberGenerator;
@@ -95,6 +99,8 @@ public:
 	void GenerateTree();
 	UFUNCTION(BlueprintCallable)
 	void GenerateSplines();
+	UFUNCTION(BlueprintCallable)
+	void GenerateTwigs();
 
 private:
 	TArray<FVector> TransformsToVectors(TArray<FTransform>& Transforms) const;
