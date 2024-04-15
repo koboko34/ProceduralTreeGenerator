@@ -35,6 +35,10 @@ public:
 	bool bShowDebug = false;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	bool bUseRandom = false;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	bool bMakeTwigs = false;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	bool bUseAsync = true;
 
 	// Max amount in degrees to apply random rotation on all axes when going forward.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (ClampMin = 0, ClampMax = 180, UIMin = 0, UIMax = 180))
@@ -60,9 +64,17 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float BranchingLengthFactor = 0.7f;
 
+	// Average number of steps to be traversed along tree until a twig is created.
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	int TwigSpawnPerAvgSteps = 4;
+
 	// Threshold length past which twigs can spawn.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float TwigStartThreshold = 300.f;
+
+	// Default twig length.
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float TwigLength = 100.f;
 
 	// Length by which each forward step should travel.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
@@ -96,12 +108,17 @@ private:
 
 public:
 	UFUNCTION(BlueprintCallable)
-	void GenerateTree();
-	UFUNCTION(BlueprintCallable)
-	void GenerateSplines();
-	UFUNCTION(BlueprintCallable)
-	void GenerateTwigs();
+	void Init();
 
 private:
 	TArray<FVector> TransformsToVectors(TArray<FTransform>& Transforms) const;
+
+	void GenerateTree();
+	void GenerateSplines();
+	void GenerateTwigs();
+
+	void ClearTree();
+	void ClearSplines();
+	void ClearTwigPoints();
+	void ClearTwigs();
 };

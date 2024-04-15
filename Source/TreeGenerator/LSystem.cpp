@@ -12,7 +12,7 @@ ULSystem::ULSystem()
 
 void ULSystem::Init()
 {
-	Timer FunctionTimer("L-system Init()");
+	// Timer FunctionTimer("ULSystem::Init()");
 	
 	if (ProductionRules.Num() == 0)
 	{
