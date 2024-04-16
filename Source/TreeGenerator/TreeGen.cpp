@@ -173,6 +173,7 @@ void ATreeGen::GenerateTree()
 			if (CurrentTotalLength >= TwigStartThreshold && TwigRandomNumberGenerator->GenerateNumber() % TwigSpawnPerAvgSteps == 0)
 			{
 				int Index = Tree[CurrentBranchIndex].TwigPoints.AddDefaulted();
+				Tree[CurrentBranchIndex].TwigPoints[Index].Scale = std::max(0.4f, CurrentWidthScale * 4.f);
 				Tree[CurrentBranchIndex].TwigPoints[Index].Location = Turtle->GetRelativeLocation();
 				Tree[CurrentBranchIndex].TwigPoints[Index].Tangent = Turtle->GetForwardVector().Cross(Turtle->GetUpVector()) *
 					(TwigRandomNumberGenerator->GenerateNumber() % 2 == 0 ? 1 : -1);
@@ -307,12 +308,12 @@ void ATreeGen::GenerateTwigs()
 				SplineMesh->SetStartAndEnd(
 					Twig.Location,
 					Twig.Tangent,
-					Twig.Location + (Twig.Tangent * TwigLength),
+					Twig.Location + (Twig.Tangent * TwigLength * Twig.Scale),
 					Twig.Tangent
 				);
 
-				SplineMesh->SetStartScale();
-				SplineMesh->SetEndScale();
+				SplineMesh->SetStartScale(FVector2D(Twig.Scale));
+				SplineMesh->SetEndScale(FVector2D(Twig.Scale));
 
 				TreeMeshes.Add(SplineMesh);
 			}
