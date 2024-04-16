@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Twig.h"
 #include "Branch.generated.h"
 
 USTRUCT(BlueprintType)
@@ -11,8 +12,11 @@ struct FBranch
 public:
 	GENERATED_BODY()
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
 	TArray<FTransform> Points;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
+	TArray<FTwig> TwigPoints;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float ParentWidthScale = 1.f;

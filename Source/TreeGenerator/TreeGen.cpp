@@ -25,12 +25,16 @@ ATreeGen::ATreeGen()
 
 	LSystem = CreateDefaultSubobject<ULSystem>("LSystem");
 	RandomNumberGenerator = CreateDefaultSubobject<URandomNumberGenerator>("RandomNumberGenerator");
+	TwigRandomNumberGenerator = CreateDefaultSubobject<URandomNumberGenerator>("TwigRandomNumberGenerator");
 }
 
 void ATreeGen::Init()
 {
 	Timer FunctionTimer("ATreeGen::Init()");
 	
+	TwigRandomNumberGenerator->RandomSeed = RandomNumberGenerator->GenerateNumber() % INT32_MAX;
+	TwigRandomNumberGenerator->Init();
+
 	GenerateTree();
 	
 	/*
@@ -76,7 +80,6 @@ void ATreeGen::GenerateTree()
 	Turtle->AddRelativeLocation(Turtle->GetForwardVector() * -NegativeHeightOffset);
 
 	ClearTree();
-	ClearTwigPoints();
 
 	Tree.AddDefaulted();
 	Tree[0].Points.Add(Turtle->GetRelativeTransform());
@@ -167,34 +170,34 @@ void ATreeGen::GenerateTree()
 				Turtle->AddLocalRotation(FRotator(RandPitch, RandYaw, RandRoll));
 			}
 
-			if (CurrentTotalLength >= TwigStartThreshold && RandomNumberGenerator->GenerateNumber() % TwigSpawnPerAvgSteps == 0)
+			if (CurrentTotalLength >= TwigStartThreshold && TwigRandomNumberGenerator->GenerateNumber() % TwigSpawnPerAvgSteps == 0)
 			{
-				int Index = TwigPoints.AddDefaulted();
-				TwigPoints[Index].Location = Turtle->GetRelativeLocation();
-				TwigPoints[Index].Tangent = Turtle->GetForwardVector().Cross(Turtle->GetUpVector()) *
-					(RandomNumberGenerator->GenerateNumber() % 2 == 0 ? 1 : -1);
-
-				
-				if (bShowDebug)
-				{
-					/*						FIX LATER, NOT A PRIORITY
-					FVector Start = Turtle->GetComponentTransform().TransformVector(TwigPoints[Index].Location);
-					FVector End = Start + (TwigPoints[Index].Tangent * 100.f);
-					DrawDebugLine(GetWorld(), Start, End, FColor::Red, false, 10.f);
-					*/
-
-					DrawDebugSphere(GetWorld(), Turtle->GetComponentLocation(), 20, 4, FColor::Red, false, 10.f);
-				}
+				int Index = Tree[CurrentBranchIndex].TwigPoints.AddDefaulted();
+				Tree[CurrentBranchIndex].TwigPoints[Index].Location = Turtle->GetRelativeLocation();
+				Tree[CurrentBranchIndex].TwigPoints[Index].Tangent = Turtle->GetForwardVector().Cross(Turtle->GetUpVector()) *
+					(TwigRandomNumberGenerator->GenerateNumber() % 2 == 0 ? 1 : -1);
 			}
-
-			if (bShowDebug)
-			{
-				DrawDebugSphere(GetWorld(), Turtle->GetComponentLocation(), 12, 4, FColor::Green, false, 10.f);
-			}
-
 			break;
 		case 'X':
 			break;
+		}
+	}
+
+	RemoveShortBranches();
+
+	if (bShowDebug)
+	{
+		for (const FBranch& Branch : Tree)
+		{
+			for (const FTransform& Transform : Branch.Points)
+			{
+				DrawDebugSphere(GetWorld(), Transform.GetLocation() + GetActorLocation(), 12, 4, FColor::Green, false, 10.f);
+			}
+
+			for (const FTwig& Twig : Branch.TwigPoints)
+			{
+				DrawDebugSphere(GetWorld(), Twig.Location + GetActorLocation(), 20, 4, FColor::Red, false, 10.f);
+			}
 		}
 	}
 }
@@ -207,13 +210,7 @@ void ATreeGen::GenerateSplines()
 	
 	for (FBranch& Branch : Tree)
 	{
-		if (Branch.Points.Num() <= 2)
-		{
-			continue;
-		}
-		
 		float CurrentWidthScale = Branch.ParentWidthScale;
-
 
 		// Temporary fix for spline folding in on itself on first set of points
 		TArray<FTransform>& TempArray = Branch.Points;
@@ -222,7 +219,6 @@ void ATreeGen::GenerateSplines()
 			TempArray.RemoveAt(0);
 		}
 		
-
 		Spline->SetSplinePoints(TransformsToVectors(TempArray), ESplineCoordinateSpace::Local);
 		//Spline->SetSplinePoints(TransformsToVectors(Branch.Points), ESplineCoordinateSpace::Local);
 
@@ -286,37 +282,40 @@ void ATreeGen::GenerateTwigs()
 
 	ClearTwigs();
 
-	for (const FTwig& Twig : TwigPoints)
+	for (const FBranch& Branch : Tree)
 	{
-		USplineMeshComponent* SplineMesh = NewObject<USplineMeshComponent>(this, USplineMeshComponent::StaticClass());
-		if (SplineMesh)
+		for (const FTwig& Twig : Branch.TwigPoints)
 		{
-			SplineMesh->AttachToComponent(Spline, FAttachmentTransformRules::KeepRelativeTransform);
-			SplineMesh->RegisterComponent();
-
-			if (TwigMesh)
+			USplineMeshComponent* SplineMesh = NewObject<USplineMeshComponent>(this, USplineMeshComponent::StaticClass());
+			if (SplineMesh)
 			{
-				SplineMesh->SetStaticMesh(TwigMesh);
+				SplineMesh->AttachToComponent(Spline, FAttachmentTransformRules::KeepRelativeTransform);
+				SplineMesh->RegisterComponent();
+
+				if (TwigMesh)
+				{
+					SplineMesh->SetStaticMesh(TwigMesh);
+				}
+				else
+				{
+					UE_LOG(LogTemp, Warning, TEXT("Twig mesh not set!"));
+				}
+
+				SplineMesh->SetForwardAxis(ESplineMeshAxis::Z, false);
+				//AddInstanceComponent(SplineMesh);
+
+				SplineMesh->SetStartAndEnd(
+					Twig.Location,
+					Twig.Tangent,
+					Twig.Location + (Twig.Tangent * TwigLength),
+					Twig.Tangent
+				);
+
+				SplineMesh->SetStartScale();
+				SplineMesh->SetEndScale();
+
+				TreeMeshes.Add(SplineMesh);
 			}
-			else
-			{
-				UE_LOG(LogTemp, Warning, TEXT("Twig mesh not set!"));
-			}
-
-			SplineMesh->SetForwardAxis(ESplineMeshAxis::Z, false);
-			//AddInstanceComponent(SplineMesh);
-
-			SplineMesh->SetStartAndEnd(
-				Twig.Location,
-				Twig.Tangent,
-				Twig.Location + (Twig.Tangent * TwigLength),
-				Twig.Tangent
-			);
-
-			SplineMesh->SetStartScale();
-			SplineMesh->SetEndScale();
-
-			TreeMeshes.Add(SplineMesh);
 		}
 	}
 }
@@ -340,11 +339,6 @@ void ATreeGen::ClearSplines()
 	Spline->ClearSplinePoints();
 }
 
-void ATreeGen::ClearTwigPoints()
-{
-	TwigPoints.Empty();
-}
-
 void ATreeGen::ClearTwigs()
 {
 	for (USplineMeshComponent* TwigComp : TwigMeshes)
@@ -355,6 +349,17 @@ void ATreeGen::ClearTwigs()
 		}
 	}
 	TwigMeshes.Empty();
+}
+
+void ATreeGen::RemoveShortBranches()
+{
+	for (int i = Tree.Num() - 1; i >= 0 ; i--)
+	{
+		if (Tree[i].Points.Num() < MinBranchSegmentCount)
+		{
+			Tree.RemoveAt(i);
+		}
+	}
 }
 
 TArray<FVector> ATreeGen::TransformsToVectors(TArray<FTransform>& Transforms) const

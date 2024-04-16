@@ -37,8 +37,8 @@ public:
 	bool bUseRandom = false;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	bool bMakeTwigs = false;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	bool bUseAsync = true;
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
+	bool bUseAsync = false;
 
 	// Max amount in degrees to apply random rotation on all axes when going forward.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (ClampMin = 0, ClampMax = 180, UIMin = 0, UIMax = 180))
@@ -99,12 +99,14 @@ private:
 	TArray<USplineMeshComponent*> TreeMeshes;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = true))
-	TArray<FTwig> TwigPoints;
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = true))
 	TArray<USplineMeshComponent*> TwigMeshes;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = true))
 	URandomNumberGenerator* RandomNumberGenerator;
+
+	URandomNumberGenerator* TwigRandomNumberGenerator;
+
+	int MinBranchSegmentCount = 3;
 
 public:
 	UFUNCTION(BlueprintCallable)
@@ -119,6 +121,7 @@ private:
 
 	void ClearTree();
 	void ClearSplines();
-	void ClearTwigPoints();
 	void ClearTwigs();
+
+	void RemoveShortBranches();
 };
