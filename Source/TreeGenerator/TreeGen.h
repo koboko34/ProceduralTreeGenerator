@@ -6,6 +6,7 @@
 #include "LSystem.h"
 #include "Branch.h"
 #include "Twig.h"
+#include "GraphNode.h"
 #include "RandomNumberGenerator.h"
 #include "TreeGen.generated.h"
 
@@ -76,6 +77,10 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float TwigLength = 100.f;
 
+	// Default twig length.
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float MinTwigScale = 0.4f;
+
 	// Length by which each forward step should travel.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float Length = 50.f;
@@ -106,6 +111,8 @@ private:
 
 	URandomNumberGenerator* TwigRandomNumberGenerator;
 
+	TSharedPtr<FGraphNode> RootNode;
+
 	int MinBranchSegmentCount = 3;
 
 public:
@@ -119,7 +126,10 @@ private:
 	void GenerateSplines();
 	void GenerateTwigs();
 
+	void GenerateTwig(TSharedPtr<FGraphNode> Node);
+
 	void ClearTree();
+	void ClearNodes();
 	void ClearSplines();
 	void ClearTwigs();
 

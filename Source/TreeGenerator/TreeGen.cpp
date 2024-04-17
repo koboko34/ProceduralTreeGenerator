@@ -8,6 +8,8 @@
 // #include "Async/Async.h"
 // #include <future>
 
+#include <stack>
+
 #include "DrawDebugHelpers.h"
 #include "Timer.h"
 
@@ -80,9 +82,12 @@ void ATreeGen::GenerateTree()
 	Turtle->AddRelativeLocation(Turtle->GetForwardVector() * -NegativeHeightOffset);
 
 	ClearTree();
+	ClearNodes();
 
 	Tree.AddDefaulted();
 	Tree[0].Points.Add(Turtle->GetRelativeTransform());
+
+	TSharedPtr<FGraphNode> Node = RootNode;
 
 	if (bShowDebug)
 	{
@@ -94,6 +99,8 @@ void ATreeGen::GenerateTree()
 	float CurrentWidthScale = 1.f;
 	float CurrentLengthScale = 1.f;
 	float CurrentTotalLength = -NegativeHeightOffset;
+
+	std::stack<TSharedPtr<FGraphNode>> NodeStack;
 
 	// Temp variable used when rotating values
 	float BranchTotalLength = 0.f;
@@ -134,6 +141,8 @@ void ATreeGen::GenerateTree()
 
 			CurrentWidthScale *= BranchingWidthScaleFactor;
 			CurrentLengthScale *= BranchingLengthFactor;
+
+			NodeStack.push(Node);
 			break;
 		case ']':
 			if (CurrentWidthScale < MinWidthScale && OpenBranchesToIgnore > 0)
@@ -149,6 +158,9 @@ void ATreeGen::GenerateTree()
 			CurrentTotalLength = Tree[CurrentBranchIndex].TotalLength;
 			Tree[CurrentBranchIndex].TotalLength = BranchTotalLength;
 			CurrentBranchIndex = Tree[CurrentBranchIndex].ParentIndex;
+
+			Node = NodeStack.top();
+			NodeStack.pop();
 			break;
 		case 'F':
 			if (CurrentWidthScale < MinWidthScale)
@@ -161,22 +173,42 @@ void ATreeGen::GenerateTree()
 			CurrentWidthScale *= WidthScaleFactor;
 			CurrentTotalLength += Length * CurrentLengthScale;
 
-			if (bUseRandom && RandomAngleMax != 0)
 			{
-				int RandPitch = (RandomNumberGenerator->GenerateNumber() % RandomAngleMax) * 2 - RandomAngleMax;
-				int RandYaw = (RandomNumberGenerator->GenerateNumber() % RandomAngleMax) * 2 - RandomAngleMax;
-				int RandRoll = (RandomNumberGenerator->GenerateNumber() % RandomAngleMax) * 2 - RandomAngleMax;
+				TSharedPtr<FGraphNode> NodePtr = Node->Add();
+				int RefCount = NodePtr.GetSharedReferenceCount();
 
-				Turtle->AddLocalRotation(FRotator(RandPitch, RandYaw, RandRoll));
-			}
+				if (bUseRandom && RandomAngleMax != 0)
+				{
+					int RandPitch = (RandomNumberGenerator->GenerateNumber() % RandomAngleMax) * 2 - RandomAngleMax;
+					int RandYaw = (RandomNumberGenerator->GenerateNumber() % RandomAngleMax) * 2 - RandomAngleMax;
+					int RandRoll = (RandomNumberGenerator->GenerateNumber() % RandomAngleMax) * 2 - RandomAngleMax;
 
-			if (CurrentTotalLength >= TwigStartThreshold && TwigRandomNumberGenerator->GenerateNumber() % TwigSpawnPerAvgSteps == 0)
-			{
-				int Index = Tree[CurrentBranchIndex].TwigPoints.AddDefaulted();
-				Tree[CurrentBranchIndex].TwigPoints[Index].Scale = std::max(0.4f, CurrentWidthScale * 4.f);
-				Tree[CurrentBranchIndex].TwigPoints[Index].Location = Turtle->GetRelativeLocation();
-				Tree[CurrentBranchIndex].TwigPoints[Index].Tangent = Turtle->GetForwardVector().Cross(Turtle->GetUpVector()) *
-					(TwigRandomNumberGenerator->GenerateNumber() % 2 == 0 ? 1 : -1);
+					Turtle->AddLocalRotation(FRotator(RandPitch, RandYaw, RandRoll));
+				}
+
+				if (CurrentTotalLength >= TwigStartThreshold && TwigRandomNumberGenerator->GenerateNumber() % TwigSpawnPerAvgSteps == 0)
+				{
+					// TEMP NUMBER
+					int TempRandomNumber = TwigRandomNumberGenerator->GenerateNumber();
+
+					// REMOVE WHEN DONE
+					int Index = Tree[CurrentBranchIndex].TwigPoints.AddDefaulted();
+					Tree[CurrentBranchIndex].TwigPoints[Index].Scale = std::max(MinTwigScale, CurrentWidthScale * 4.f);
+					Tree[CurrentBranchIndex].TwigPoints[Index].Location = Turtle->GetRelativeLocation();
+					Tree[CurrentBranchIndex].TwigPoints[Index].Tangent = Turtle->GetForwardVector().Cross(Turtle->GetUpVector()) *
+						(TempRandomNumber % 2 == 0 ? 1 : -1);
+					// TO HERE
+					
+
+					NodePtr->bHasTwig = true;
+					NodePtr->Twig.Scale = std::max(MinTwigScale, CurrentWidthScale * 4.f);
+					NodePtr->Twig.Location = Turtle->GetRelativeLocation();
+					NodePtr->Twig.Tangent = Turtle->GetForwardVector().Cross(Turtle->GetUpVector()) *
+						(TempRandomNumber % 2 == 0 ? 1 : -1);
+					
+				}
+
+				Node = NodePtr;
 			}
 			break;
 		case 'X':
@@ -184,7 +216,7 @@ void ATreeGen::GenerateTree()
 		}
 	}
 
-	RemoveShortBranches();
+	RemoveShortBranches(); // this might cause some problems
 
 	if (bShowDebug)
 	{
@@ -280,9 +312,16 @@ void ATreeGen::GenerateTwigs()
 	}
 	
 	// Timer FunctionTimer("GenerateTwigs");
-
+	
 	ClearTwigs();
+	RootNode->CalculateDistanceFromTip(); // also disables twigs on branch tips
 
+	for (const TSharedPtr<FGraphNode> Node : RootNode->ChildNodes)
+	{
+		GenerateTwig(Node);
+	}
+	
+	/*
 	for (const FBranch& Branch : Tree)
 	{
 		for (const FTwig& Twig : Branch.TwigPoints)
@@ -319,6 +358,51 @@ void ATreeGen::GenerateTwigs()
 			}
 		}
 	}
+	*/
+}
+
+void ATreeGen::GenerateTwig(TSharedPtr<FGraphNode> Node)
+{
+	if (Node->bHasTwig)
+	{
+		FTwig& Twig = Node->Twig;
+
+		USplineMeshComponent* SplineMesh = NewObject<USplineMeshComponent>(this, USplineMeshComponent::StaticClass());
+		if (SplineMesh)
+		{
+			SplineMesh->AttachToComponent(Spline, FAttachmentTransformRules::KeepRelativeTransform);
+			SplineMesh->RegisterComponent();
+
+			if (TwigMesh)
+			{
+				SplineMesh->SetStaticMesh(TwigMesh);
+			}
+			else
+			{
+				UE_LOG(LogTemp, Warning, TEXT("Twig mesh not set!"));
+			}
+
+			SplineMesh->SetForwardAxis(ESplineMeshAxis::Z, false);
+			//AddInstanceComponent(SplineMesh);
+
+			SplineMesh->SetStartAndEnd(
+				Twig.Location,
+				Twig.Tangent,
+				Twig.Location + (Twig.Tangent * TwigLength * Twig.Scale),
+				Twig.Tangent
+			);
+
+			SplineMesh->SetStartScale(FVector2D(Twig.Scale));
+			SplineMesh->SetEndScale(FVector2D(Twig.Scale));
+
+			TreeMeshes.Add(SplineMesh);
+		}
+	}
+
+	for (TSharedPtr<FGraphNode> ChildNode : Node->ChildNodes)
+	{
+		GenerateTwig(ChildNode);
+	}
 }
 
 void ATreeGen::ClearTree()
@@ -326,16 +410,25 @@ void ATreeGen::ClearTree()
 	Tree.Empty();
 }
 
+void ATreeGen::ClearNodes()
+{
+	// I'm assuming this is calling the destructor implicitly
+	RootNode = MakeShared<FGraphNode>();
+}
+
 void ATreeGen::ClearSplines()
 {
-	for (USplineMeshComponent* SplineMesh : TreeMeshes)
+	if (!TreeMeshes.IsEmpty())
 	{
-		if (SplineMesh)
+		for (USplineMeshComponent* SplineMesh : TreeMeshes)
 		{
-			SplineMesh->DestroyComponent();
+			if (SplineMesh)
+			{
+				SplineMesh->DestroyComponent();
+			}
 		}
+		TreeMeshes.Empty();
 	}
-	TreeMeshes.Empty();
 
 	Spline->ClearSplinePoints();
 }
