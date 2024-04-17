@@ -36,60 +36,68 @@ public:
 	bool bShowDebug = false;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	bool bUseRandom = false;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Twig")
 	bool bMakeTwigs = false;
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
 	bool bUseAsync = false;
 
 	// Max amount in degrees to apply random rotation on all axes when going forward.
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (ClampMin = 0, ClampMax = 180, UIMin = 0, UIMax = 180))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (ClampMin = 0, ClampMax = 180, UIMin = 0, UIMax = 180), Category = "Tree")
 	int RandomAngleMax = 25;
 
 	// Max amount in degrees to apply random rotation on Roll axis when branching.
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Tree")
 	int BranchRollMax = 137;
 
 	// Minimum width allowed for branch segments. Each segments smaller than this will not produce a spline mesh.
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (ClampMin = 0, ClampMax = 1, UIMin = 0, UIMax = 1))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (ClampMin = 0, ClampMax = 1, UIMin = 0, UIMax = 1), Category = "Tree")
 	float MinWidthScale = 0.1f;
 
 	// Scales width by this amount when going forward.
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Tree")
 	float WidthScaleFactor = 0.9f;
 
 	// Scales width by this amount when creating new branch.
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Tree")
 	float BranchingWidthScaleFactor = 0.5f;
 
 	// Scales length by this amount when creating new branch.
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Tree")
 	float BranchingLengthFactor = 0.7f;
 
 	// Average number of steps to be traversed along tree until a twig is created.
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Twig")
 	int TwigSpawnPerAvgSteps = 4;
 
 	// Threshold length past which twigs can spawn.
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Twig")
 	float TwigStartThreshold = 300.f;
 
 	// Default twig length.
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Twig")
 	float TwigLength = 100.f;
 
-	// Default twig length.
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	// Minimum scale for twigs.
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Twig")
 	float MinTwigScale = 0.4f;
 
+	// Minimum scale for twigs.
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Twig")
+	float TwigScalePerSegment = 0.1f;
+
+	// Minimum distance in segments from branch tip for.
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Twig")
+	int MinDistanceFromTipForTwig = 2;
+
 	// Length by which each forward step should travel.
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Tree")
 	float Length = 50.f;
 
 	// Angle by which to rotate Yaw on '+' and '-'.
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Tree")
 	float Angle = 25.f;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	UPROPERTY()
 	float CurrentAngle = 0.f;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)

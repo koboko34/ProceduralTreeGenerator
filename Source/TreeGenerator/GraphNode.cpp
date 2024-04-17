@@ -20,7 +20,7 @@ TSharedPtr<FGraphNode> FGraphNode::Add()
 	return ChildNode;
 }
 
-int FGraphNode::CalculateDistanceFromTip()
+int FGraphNode::CalculateDistanceFromTip(int MinDistFromTipForTwig)
 {
 	if (ChildNodes.IsEmpty())
 	{
@@ -31,7 +31,12 @@ int FGraphNode::CalculateDistanceFromTip()
 
 	for (const TSharedPtr<FGraphNode> Node : ChildNodes)
 	{
-		DistanceFromFurthestTip = std::max(DistanceFromFurthestTip, Node->CalculateDistanceFromTip() + 1);
+		DistanceFromFurthestTip = std::max(DistanceFromFurthestTip, Node->CalculateDistanceFromTip(MinDistFromTipForTwig) + 1);
+	}
+
+	if (DistanceFromFurthestTip < MinDistFromTipForTwig)
+	{
+		bHasTwig = false;
 	}
 
 	return DistanceFromFurthestTip;

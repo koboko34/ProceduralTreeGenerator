@@ -27,6 +27,6 @@ public:
 public:
 	TSharedPtr<FGraphNode> Add();
 
-	int CalculateDistanceFromTip(); // also disables twigs on branch tips
+	int CalculateDistanceFromTip(int MinDistFromTipForTwig); // also disables twigs on branch tips
 
 };

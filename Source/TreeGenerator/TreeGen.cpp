@@ -188,6 +188,7 @@ void ATreeGen::GenerateTree()
 
 				if (CurrentTotalLength >= TwigStartThreshold && TwigRandomNumberGenerator->GenerateNumber() % TwigSpawnPerAvgSteps == 0)
 				{
+					/*
 					// TEMP NUMBER
 					int TempRandomNumber = TwigRandomNumberGenerator->GenerateNumber();
 
@@ -198,14 +199,15 @@ void ATreeGen::GenerateTree()
 					Tree[CurrentBranchIndex].TwigPoints[Index].Tangent = Turtle->GetForwardVector().Cross(Turtle->GetUpVector()) *
 						(TempRandomNumber % 2 == 0 ? 1 : -1);
 					// TO HERE
-					
+					*/
 
 					NodePtr->bHasTwig = true;
-					NodePtr->Twig.Scale = std::max(MinTwigScale, CurrentWidthScale * 4.f);
+					// NodePtr->Twig.Scale = std::max(MinTwigScale, CurrentWidthScale * 4.f);
 					NodePtr->Twig.Location = Turtle->GetRelativeLocation();
-					NodePtr->Twig.Tangent = Turtle->GetForwardVector().Cross(Turtle->GetUpVector()) *
-						(TempRandomNumber % 2 == 0 ? 1 : -1);
-					
+					FVector CrossProduct = Turtle->GetForwardVector().Cross(Turtle->GetUpVector());
+
+					NodePtr->Twig.Tangent = CrossProduct.RotateAngleAxis((double)(TwigRandomNumberGenerator->GenerateNumber() % 360),
+						Turtle->GetForwardVector());
 				}
 
 				Node = NodePtr;
@@ -314,7 +316,7 @@ void ATreeGen::GenerateTwigs()
 	// Timer FunctionTimer("GenerateTwigs");
 	
 	ClearTwigs();
-	RootNode->CalculateDistanceFromTip(); // also disables twigs on branch tips
+	RootNode->CalculateDistanceFromTip(MinDistanceFromTipForTwig); // also disables twigs on branch tips
 
 	for (const TSharedPtr<FGraphNode> Node : RootNode->ChildNodes)
 	{
@@ -385,10 +387,16 @@ void ATreeGen::GenerateTwig(TSharedPtr<FGraphNode> Node)
 			SplineMesh->SetForwardAxis(ESplineMeshAxis::Z, false);
 			//AddInstanceComponent(SplineMesh);
 
+			Twig.Scale = std::min(std::max(MinTwigScale, Node->DistanceFromFurthestTip * TwigScalePerSegment), 1.f);
+
+			float NumA = (TwigRandomNumberGenerator->GenerateNumber() % 6) * 0.1f + 0.5f;
+			float NumB = (TwigRandomNumberGenerator->GenerateNumber() % 6) * 0.1f + 0.5f;
+			float RandomScale = NumA + NumB;
+
 			SplineMesh->SetStartAndEnd(
 				Twig.Location,
 				Twig.Tangent,
-				Twig.Location + (Twig.Tangent * TwigLength * Twig.Scale),
+				Twig.Location + (Twig.Tangent * TwigLength * Twig.Scale * RandomScale),
 				Twig.Tangent
 			);
 
