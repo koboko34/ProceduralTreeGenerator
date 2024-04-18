@@ -204,6 +204,7 @@ void ATreeGen::GenerateTree()
 					NodePtr->bHasTwig = true;
 					// NodePtr->Twig.Scale = std::max(MinTwigScale, CurrentWidthScale * 4.f);
 					NodePtr->Twig.Location = Turtle->GetRelativeLocation();
+					NodePtr->Twig.TwigMesh = AssignRandomTwigMesh();
 					FVector CrossProduct = Turtle->GetForwardVector().Cross(Turtle->GetUpVector());
 
 					NodePtr->Twig.Tangent = CrossProduct.RotateAngleAxis((double)(TwigRandomNumberGenerator->GenerateNumber() % 360),
@@ -265,13 +266,14 @@ void ATreeGen::GenerateSplines()
 				SplineMesh->AttachToComponent(Spline, FAttachmentTransformRules::KeepRelativeTransform);
 				SplineMesh->RegisterComponent();
 
-				if (MeshForSplines)
+				if (MeshForTree)
 				{
-					SplineMesh->SetStaticMesh(MeshForSplines);
+					SplineMesh->SetStaticMesh(MeshForTree);
 				}
 				else
 				{
 					UE_LOG(LogTemp, Warning, TEXT("Spline static mesh not set!"));
+					return;
 				}
 				
 				SplineMesh->SetForwardAxis(ESplineMeshAxis::Z, false);
@@ -365,6 +367,11 @@ void ATreeGen::GenerateTwigs()
 
 void ATreeGen::GenerateTwig(TSharedPtr<FGraphNode> Node)
 {
+	for (TSharedPtr<FGraphNode> ChildNode : Node->ChildNodes)
+	{
+		GenerateTwig(ChildNode);
+	}
+	
 	if (Node->bHasTwig)
 	{
 		FTwig& Twig = Node->Twig;
@@ -375,13 +382,14 @@ void ATreeGen::GenerateTwig(TSharedPtr<FGraphNode> Node)
 			SplineMesh->AttachToComponent(Spline, FAttachmentTransformRules::KeepRelativeTransform);
 			SplineMesh->RegisterComponent();
 
-			if (TwigMesh)
+			if (Twig.TwigMesh)
 			{
-				SplineMesh->SetStaticMesh(TwigMesh);
+				SplineMesh->SetStaticMesh(Twig.TwigMesh);
 			}
 			else
 			{
 				UE_LOG(LogTemp, Warning, TEXT("Twig mesh not set!"));
+				return;
 			}
 
 			SplineMesh->SetForwardAxis(ESplineMeshAxis::Z, false);
@@ -405,11 +413,6 @@ void ATreeGen::GenerateTwig(TSharedPtr<FGraphNode> Node)
 
 			TreeMeshes.Add(SplineMesh);
 		}
-	}
-
-	for (TSharedPtr<FGraphNode> ChildNode : Node->ChildNodes)
-	{
-		GenerateTwig(ChildNode);
 	}
 }
 
@@ -443,14 +446,14 @@ void ATreeGen::ClearSplines()
 
 void ATreeGen::ClearTwigs()
 {
-	for (USplineMeshComponent* TwigComp : TwigMeshes)
+	for (USplineMeshComponent* TwigComp : SpawnedTwigMeshes)
 	{
 		if (TwigComp)
 		{
 			TwigComp->DestroyComponent();
 		}
 	}
-	TwigMeshes.Empty();
+	SpawnedTwigMeshes.Empty();
 }
 
 void ATreeGen::RemoveShortBranches()
@@ -462,6 +465,21 @@ void ATreeGen::RemoveShortBranches()
 			Tree.RemoveAt(i);
 		}
 	}
+}
+
+UStaticMesh* ATreeGen::AssignRandomTwigMesh() const
+{
+	if (TwigMeshes.Num() == 0)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("No twig meshes assigned!"));
+		return nullptr;
+	}
+	
+	std::default_random_engine Engine(TwigRandomNumberGenerator->GenerateNumber());
+	std::uniform_int_distribution<int> Distribution{ 0, TwigMeshes.Num() - 1};
+
+	int Index = Distribution(Engine);
+	return TwigMeshes[Index];
 }
 
 TArray<FVector> ATreeGen::TransformsToVectors(TArray<FTransform>& Transforms) const

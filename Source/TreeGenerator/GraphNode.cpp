@@ -2,10 +2,15 @@
 
 #include "GraphNode.h"
 
-int FGraphNode::MaxSeenIndex = 0;
+int FGraphNode::MaxIndex = 0;
 
 FGraphNode::FGraphNode()
 {
+}
+
+FGraphNode::~FGraphNode()
+{
+	UE_LOG(LogTemp, Warning, TEXT("FGraphNode destructor called!"));
 }
 
 TSharedPtr<FGraphNode> FGraphNode::Add()
@@ -13,8 +18,8 @@ TSharedPtr<FGraphNode> FGraphNode::Add()
 	TSharedPtr<FGraphNode> ChildNode = MakeShared<FGraphNode>();
 	ChildNode->ParentNode = TWeakPtr<FGraphNode>(AsShared());
 	ChildNode->DistanceFromRoot = DistanceFromRoot + 1;
-	MaxSeenIndex++;
-	ChildNode->Index = MaxSeenIndex;
+	MaxIndex++;
+	ChildNode->Index = MaxIndex;
 	ChildNodes.Add(ChildNode);
 
 	return ChildNode;

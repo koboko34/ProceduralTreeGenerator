@@ -17,5 +17,8 @@ public:
 	FVector Tangent;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UStaticMesh* TwigMesh;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float Scale = 1.f;
 };

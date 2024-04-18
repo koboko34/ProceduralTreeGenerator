@@ -10,9 +10,10 @@ class FGraphNode : public TSharedFromThis<FGraphNode>
 {
 public:
 	FGraphNode();
+	~FGraphNode();
 
 public:
-	static int MaxSeenIndex;
+	static int MaxIndex;
 	
 	int Index = 0;
 	int DistanceFromRoot = 0;

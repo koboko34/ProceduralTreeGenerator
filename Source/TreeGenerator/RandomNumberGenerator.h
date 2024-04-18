@@ -24,11 +24,15 @@ public:
 	int RandomSeed = 1;
 
 private:
+	int Max = 999999;
+	
 	std::default_random_engine Engine;
-	std::uniform_int_distribution<int> Distribution{ 0, 999999 };
+	std::uniform_int_distribution<int> Distribution{ 0, Max };
 
 public:
 	UFUNCTION(BlueprintCallable)
 	int GenerateNumber();
-		
+	
+	UFUNCTION(BlueprintCallable)
+	int GetMax() const;
 };

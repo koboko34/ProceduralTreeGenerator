@@ -100,10 +100,10 @@ public:
 	UPROPERTY()
 	float CurrentAngle = 0.f;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
-	UStaticMesh* MeshForSplines;
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
-	UStaticMesh* TwigMesh;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Tree")
+	UStaticMesh* MeshForTree;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Twig")
+	TArray<UStaticMesh*> TwigMeshes;
 
 private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = true))
@@ -112,7 +112,7 @@ private:
 	TArray<USplineMeshComponent*> TreeMeshes;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = true))
-	TArray<USplineMeshComponent*> TwigMeshes;
+	TArray<USplineMeshComponent*> SpawnedTwigMeshes;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = true))
 	URandomNumberGenerator* RandomNumberGenerator;
@@ -142,4 +142,6 @@ private:
 	void ClearTwigs();
 
 	void RemoveShortBranches();
+
+	UStaticMesh* AssignRandomTwigMesh() const;
 };

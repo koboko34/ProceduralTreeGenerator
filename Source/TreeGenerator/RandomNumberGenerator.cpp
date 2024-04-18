@@ -18,3 +18,8 @@ int URandomNumberGenerator::GenerateNumber()
 {
 	return Distribution(Engine);
 }
+
+int URandomNumberGenerator::GetMax() const
+{
+	return Max;
+}
