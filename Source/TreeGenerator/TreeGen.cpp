@@ -4,6 +4,7 @@
 #include "TreeGen.h"
 #include "Components/SplineComponent.h"
 #include "Components/SplineMeshComponent.h"
+#include "Components/HierarchicalInstancedStaticMeshComponent.h" 
 
 #include <stack>
 
@@ -41,6 +42,11 @@ void ATreeGen::Init()
 	
 	TwigRandomNumberGenerator->RandomSeed = RandomNumberGenerator->GenerateNumber() % INT32_MAX;
 	TwigRandomNumberGenerator->Init();
+
+	if (bUseInstancing)
+	{
+		SetupInstancers();
+	}
 
 	GenerateTree();
 	GenerateSplines();
@@ -165,7 +171,8 @@ void ATreeGen::GenerateTree()
 				{
 					NodePtr->bHasTwig = true;
 					NodePtr->Twig.Location = Turtle->GetRelativeLocation();
-					NodePtr->Twig.TwigMesh = AssignRandomTwigMesh();
+					NodePtr->Twig.TwigMesh = AssignRandomTwigMesh(); // used for original method, instancing uses mesh index
+					NodePtr->Twig.MeshIndex = AssignRandomTwigMeshIndex();
 					FVector CrossProduct = Turtle->GetForwardVector().Cross(Turtle->GetUpVector());
 
 					std::default_random_engine Engine(TwigRandomNumberGenerator->GenerateNumber());
@@ -173,6 +180,7 @@ void ATreeGen::GenerateTree()
 					double RotationAngle = Distribution(Engine);
 
 					NodePtr->Twig.Tangent = CrossProduct.RotateAngleAxis(RotationAngle, Turtle->GetForwardVector());
+					NodePtr->Twig.Rotation = FQuat(CrossProduct.ToOrientationRotator());
 				}
 
 				Node = NodePtr;
@@ -300,6 +308,24 @@ void ATreeGen::GenerateTwig(TSharedPtr<FGraphNode> Node)
 	{
 		FTwig& Twig = Node->Twig;
 
+		if (bUseInstancing)
+		{
+			if (Twig.MeshIndex == -1)
+			{
+				return;
+			}
+			
+			UHierarchicalInstancedStaticMeshComponent* Instancer = TwigInstancers[Twig.MeshIndex];
+
+			FTransform TwigTransform = FTransform::Identity;
+			TwigTransform.SetLocation(Twig.Location);
+			TwigTransform.SetRotation(Twig.Rotation);
+			TwigTransform.SetScale3D(FVector(Twig.Scale));
+
+			int Index = Instancer->AddInstance(TwigTransform);
+			return;
+		}
+
 		USplineMeshComponent* SplineMesh = Cast<USplineMeshComponent>(AddComponentByClass(
 			USplineMeshComponent::StaticClass(),
 			false,
@@ -339,8 +365,9 @@ void ATreeGen::GenerateTwig(TSharedPtr<FGraphNode> Node)
 			SplineMesh->SetStartScale(FVector2D(Twig.Scale));
 			SplineMesh->SetEndScale(FVector2D(Twig.Scale));
 
-			SpawnedTwigMeshes.Add(SplineMesh);
+			SpawnedTwigSplineMeshes.Add(SplineMesh);
 		}
+		
 	}
 }
 
@@ -374,14 +401,14 @@ void ATreeGen::ClearSplines()
 
 void ATreeGen::ClearTwigs()
 {
-	for (USplineMeshComponent* TwigComp : SpawnedTwigMeshes)
+	for (USplineMeshComponent* TwigComp : SpawnedTwigSplineMeshes)
 	{
 		if (TwigComp)
 		{
 			TwigComp->DestroyComponent();
 		}
 	}
-	SpawnedTwigMeshes.Empty();
+	SpawnedTwigSplineMeshes.Empty();
 }
 
 void ATreeGen::RemoveShortBranches()
@@ -410,6 +437,20 @@ UStaticMesh* ATreeGen::AssignRandomTwigMesh() const
 	return TwigMeshes[Index];
 }
 
+int ATreeGen::AssignRandomTwigMeshIndex() const
+{
+	if (TwigInstancers.Num() == 0)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("No instance twig meshes assigned!"));
+		return -1;
+	}
+
+	std::default_random_engine Engine(TwigRandomNumberGenerator->GenerateNumber());
+	std::uniform_int_distribution<int> Distribution{ 0, TwigInstancers.Num() - 1 };
+
+	return Distribution(Engine);
+}
+
 TArray<FVector> ATreeGen::TransformsToVectors(TArray<FTransform>& Transforms) const
 {
 	TArray<FVector> Vectors;
@@ -418,4 +459,35 @@ TArray<FVector> ATreeGen::TransformsToVectors(TArray<FTransform>& Transforms) co
 		Vectors.Add(Transform.GetLocation());
 	}
 	return Vectors;
+}
+
+void ATreeGen::SetupInstancers()
+{
+	TwigInstancers.Empty();
+
+	for (UStaticMesh* Mesh : TwigMeshes)
+	{
+		if (!Mesh)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("Twig mesh not set!"));
+			return;
+		}
+		
+		UHierarchicalInstancedStaticMeshComponent* Instancer = Cast<UHierarchicalInstancedStaticMeshComponent>(AddComponentByClass(
+			UHierarchicalInstancedStaticMeshComponent::StaticClass(),
+			false,
+			FTransform::Identity,
+			false)
+		);
+
+		Instancer->SetStaticMesh(Mesh);
+		Instancer->SetMobility(EComponentMobility::Static);
+		Instancer->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+
+		Instancer->bNeverDistanceCull = true;
+		
+		Instancer->SetCullDistances(CullDistance, CullDistance);
+
+		TwigInstancers.Add(Instancer);
+	}
 }

@@ -15,9 +15,15 @@ public:
 	FVector Location;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	FVector Tangent;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	FQuat Rotation = FQuat::Identity;
 
+	// used by original method, instancing will use a mesh index
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	UStaticMesh* TwigMesh;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	int MeshIndex = 0;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float Scale = 1.f;

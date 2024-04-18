@@ -38,6 +38,8 @@ public:
 	bool bUseRandom = false;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Twig")
 	bool bMakeTwigs = false;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Twig")
+	bool bUseInstancing = false;
 
 	// Max amount in degrees to apply random rotation on all axes when going forward.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (ClampMin = 0, ClampMax = 180, UIMin = 0, UIMax = 180), Category = "Tree")
@@ -87,6 +89,10 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Twig")
 	int MinDistanceFromTipForTwig = 2;
 
+	// Distance at which to cull twigs.
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Twig")
+	float CullDistance = 3000.f;
+
 	// Length by which each forward step should travel.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Tree")
 	float Length = 50.f;
@@ -107,7 +113,9 @@ private:
 	TArray<USplineMeshComponent*> TreeMeshes;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Twig", meta = (AllowPrivateAccess = true))
-	TArray<USplineMeshComponent*> SpawnedTwigMeshes;
+	TArray<USplineMeshComponent*> SpawnedTwigSplineMeshes;
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Twig", meta = (AllowPrivateAccess = true))
+	TArray<UHierarchicalInstancedStaticMeshComponent*> TwigInstancers;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = true))
 	URandomNumberGenerator* RandomNumberGenerator;
@@ -124,6 +132,8 @@ public:
 private:
 	TArray<FVector> TransformsToVectors(TArray<FTransform>& Transforms) const;
 
+	void SetupInstancers();
+
 	void GenerateTree();
 	void GenerateSplines();
 	void GenerateTwigs();
@@ -138,4 +148,5 @@ private:
 	void RemoveShortBranches();
 
 	UStaticMesh* AssignRandomTwigMesh() const;
+	int AssignRandomTwigMeshIndex() const;
 };
