@@ -15,10 +15,6 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
 	TArray<FTransform> Points;
 
-	// DEPRECATED BY GRAPH NODES
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
-	TArray<FTwig> TwigPoints;
-
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float ParentWidthScale = 1.f;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)

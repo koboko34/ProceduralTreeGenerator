@@ -47,17 +47,17 @@ void ULSystem::Evolve()
 	CurrentString = NextString;
 }
 
-FString ULSystem::ApplyRule(FString c)
+FString ULSystem::ApplyRule(FString Character)
 {	
 	for (const FRule& Rule : ProductionRules)
 	{
-		if (Rule.Element == c)
+		if (Rule.Element == Character)
 		{
 			return Rule.ProductionRule;
 		}
 	}
 
-	UE_LOG(LogTemp, Warning, TEXT("Could not find rule for: %s"), *c);
+	UE_LOG(LogTemp, Warning, TEXT("Could not find rule for: %s"), *Character);
 	return "?";
 }
 

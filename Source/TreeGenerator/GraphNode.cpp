@@ -8,11 +8,6 @@ FGraphNode::FGraphNode()
 {
 }
 
-FGraphNode::~FGraphNode()
-{
-	UE_LOG(LogTemp, Warning, TEXT("FGraphNode destructor called!"));
-}
-
 TSharedPtr<FGraphNode> FGraphNode::Add()
 {
 	TSharedPtr<FGraphNode> ChildNode = MakeShared<FGraphNode>();

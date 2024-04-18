@@ -55,5 +55,5 @@ private:
 	void Evolve();
 	void ProcessAlphabet();
 
-	FString ApplyRule(FString c);
+	FString ApplyRule(FString Character);
 };

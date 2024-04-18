@@ -5,9 +5,6 @@
 #include "Components/SplineComponent.h"
 #include "Components/SplineMeshComponent.h"
 
-// #include "Async/Async.h"
-// #include <future>
-
 #include <stack>
 
 #include "DrawDebugHelpers.h"
@@ -18,12 +15,20 @@ ATreeGen::ATreeGen()
 	PrimaryActorTick.bCanEverTick = false;
 	PrimaryActorTick.bStartWithTickEnabled = false;
 
+	// Disable construction script on drag. Stops the entire tree being regenerated when moved.
+	UBlueprint* Blueprint = Cast<UBlueprint>(GetClass()->ClassGeneratedBy);
+	if (Blueprint)
+	{
+		Blueprint->bRunConstructionScriptOnDrag = false;
+	}
+
 	Root = CreateDefaultSubobject<USceneComponent>("Root");
 	SetRootComponent(Root);
 	Turtle = CreateDefaultSubobject<USceneComponent>("Turtle");
 	Turtle->SetupAttachment(RootComponent);
 	Spline = CreateDefaultSubobject<USplineComponent>("Spline");
 	Spline->SetupAttachment(RootComponent);
+	Spline->SetMobility(EComponentMobility::Static);
 
 	LSystem = CreateDefaultSubobject<ULSystem>("LSystem");
 	RandomNumberGenerator = CreateDefaultSubobject<URandomNumberGenerator>("RandomNumberGenerator");
@@ -38,36 +43,6 @@ void ATreeGen::Init()
 	TwigRandomNumberGenerator->Init();
 
 	GenerateTree();
-	
-	/*
-	if (bUseAsync)
-	{
-		std::promise<void> SplinesPromise;
-		std::future<void> SplinesFuture = SplinesPromise.get_future();
-		
-		Async(EAsyncExecution::ThreadPool, [this, &SplinesPromise]() {
-			this->GenerateSplines();
-			SplinesPromise.set_value();
-		});
-
-		std::promise<void> TwigsPromise;
-		std::future<void> TwigsFuture = TwigsPromise.get_future();
-
-		Async(EAsyncExecution::ThreadPool, [this, &TwigsPromise]() {
-			this->GenerateTwigs();
-			TwigsPromise.set_value();
-		});
-
-		SplinesFuture.wait();
-		TwigsFuture.wait();
-	}
-	else
-	{
-		GenerateSplines();
-		GenerateTwigs();
-	}
-	*/
-
 	GenerateSplines();
 	GenerateTwigs();
 }
@@ -188,27 +163,16 @@ void ATreeGen::GenerateTree()
 
 				if (CurrentTotalLength >= TwigStartThreshold && TwigRandomNumberGenerator->GenerateNumber() % TwigSpawnPerAvgSteps == 0)
 				{
-					/*
-					// TEMP NUMBER
-					int TempRandomNumber = TwigRandomNumberGenerator->GenerateNumber();
-
-					// REMOVE WHEN DONE
-					int Index = Tree[CurrentBranchIndex].TwigPoints.AddDefaulted();
-					Tree[CurrentBranchIndex].TwigPoints[Index].Scale = std::max(MinTwigScale, CurrentWidthScale * 4.f);
-					Tree[CurrentBranchIndex].TwigPoints[Index].Location = Turtle->GetRelativeLocation();
-					Tree[CurrentBranchIndex].TwigPoints[Index].Tangent = Turtle->GetForwardVector().Cross(Turtle->GetUpVector()) *
-						(TempRandomNumber % 2 == 0 ? 1 : -1);
-					// TO HERE
-					*/
-
 					NodePtr->bHasTwig = true;
-					// NodePtr->Twig.Scale = std::max(MinTwigScale, CurrentWidthScale * 4.f);
 					NodePtr->Twig.Location = Turtle->GetRelativeLocation();
 					NodePtr->Twig.TwigMesh = AssignRandomTwigMesh();
 					FVector CrossProduct = Turtle->GetForwardVector().Cross(Turtle->GetUpVector());
 
-					NodePtr->Twig.Tangent = CrossProduct.RotateAngleAxis((double)(TwigRandomNumberGenerator->GenerateNumber() % 360),
-						Turtle->GetForwardVector());
+					std::default_random_engine Engine(TwigRandomNumberGenerator->GenerateNumber());
+					std::uniform_real_distribution<double> Distribution{ 0, 360 };
+					double RotationAngle = Distribution(Engine);
+
+					NodePtr->Twig.Tangent = CrossProduct.RotateAngleAxis(RotationAngle, Turtle->GetForwardVector());
 				}
 
 				Node = NodePtr;
@@ -228,11 +192,6 @@ void ATreeGen::GenerateTree()
 			for (const FTransform& Transform : Branch.Points)
 			{
 				DrawDebugSphere(GetWorld(), Transform.GetLocation() + GetActorLocation(), 12, 4, FColor::Green, false, 10.f);
-			}
-
-			for (const FTwig& Twig : Branch.TwigPoints)
-			{
-				DrawDebugSphere(GetWorld(), Twig.Location + GetActorLocation(), 20, 4, FColor::Red, false, 10.f);
 			}
 		}
 	}
@@ -260,11 +219,16 @@ void ATreeGen::GenerateSplines()
 
 		for (int i = 0; i < Spline->GetNumberOfSplinePoints() - 1; i++)
 		{
-			USplineMeshComponent* SplineMesh = NewObject<USplineMeshComponent>(this, USplineMeshComponent::StaticClass());
+			USplineMeshComponent* SplineMesh = Cast<USplineMeshComponent>(AddComponentByClass(
+				USplineMeshComponent::StaticClass(),
+				false,
+				FTransform::Identity,
+				false)
+			);
+
 			if (SplineMesh)
 			{
-				SplineMesh->AttachToComponent(Spline, FAttachmentTransformRules::KeepRelativeTransform);
-				SplineMesh->RegisterComponent();
+				SplineMesh->SetMobility(EComponentMobility::Static);
 
 				if (MeshForTree)
 				{
@@ -272,12 +236,11 @@ void ATreeGen::GenerateSplines()
 				}
 				else
 				{
-					UE_LOG(LogTemp, Warning, TEXT("Spline static mesh not set!"));
+					UE_LOG(LogTemp, Warning, TEXT("Tree static mesh not set!"));
 					return;
 				}
 				
 				SplineMesh->SetForwardAxis(ESplineMeshAxis::Z, false);
-				//AddInstanceComponent(SplineMesh);
 
 				FVector StartLocation, StartTangent, EndLocation, EndTangent;
 				Spline->GetLocationAndTangentAtSplinePoint(i, StartLocation, StartTangent, ESplineCoordinateSpace::Local);
@@ -324,45 +287,6 @@ void ATreeGen::GenerateTwigs()
 	{
 		GenerateTwig(Node);
 	}
-	
-	/*
-	for (const FBranch& Branch : Tree)
-	{
-		for (const FTwig& Twig : Branch.TwigPoints)
-		{
-			USplineMeshComponent* SplineMesh = NewObject<USplineMeshComponent>(this, USplineMeshComponent::StaticClass());
-			if (SplineMesh)
-			{
-				SplineMesh->AttachToComponent(Spline, FAttachmentTransformRules::KeepRelativeTransform);
-				SplineMesh->RegisterComponent();
-
-				if (TwigMesh)
-				{
-					SplineMesh->SetStaticMesh(TwigMesh);
-				}
-				else
-				{
-					UE_LOG(LogTemp, Warning, TEXT("Twig mesh not set!"));
-				}
-
-				SplineMesh->SetForwardAxis(ESplineMeshAxis::Z, false);
-				//AddInstanceComponent(SplineMesh);
-
-				SplineMesh->SetStartAndEnd(
-					Twig.Location,
-					Twig.Tangent,
-					Twig.Location + (Twig.Tangent * TwigLength * Twig.Scale),
-					Twig.Tangent
-				);
-
-				SplineMesh->SetStartScale(FVector2D(Twig.Scale));
-				SplineMesh->SetEndScale(FVector2D(Twig.Scale));
-
-				TreeMeshes.Add(SplineMesh);
-			}
-		}
-	}
-	*/
 }
 
 void ATreeGen::GenerateTwig(TSharedPtr<FGraphNode> Node)
@@ -376,11 +300,16 @@ void ATreeGen::GenerateTwig(TSharedPtr<FGraphNode> Node)
 	{
 		FTwig& Twig = Node->Twig;
 
-		USplineMeshComponent* SplineMesh = NewObject<USplineMeshComponent>(this, USplineMeshComponent::StaticClass());
+		USplineMeshComponent* SplineMesh = Cast<USplineMeshComponent>(AddComponentByClass(
+			USplineMeshComponent::StaticClass(),
+			false,
+			FTransform::Identity,
+			false)
+		);
+
 		if (SplineMesh)
 		{
-			SplineMesh->AttachToComponent(Spline, FAttachmentTransformRules::KeepRelativeTransform);
-			SplineMesh->RegisterComponent();
+			SplineMesh->SetMobility(EComponentMobility::Static);
 
 			if (Twig.TwigMesh)
 			{
@@ -393,7 +322,6 @@ void ATreeGen::GenerateTwig(TSharedPtr<FGraphNode> Node)
 			}
 
 			SplineMesh->SetForwardAxis(ESplineMeshAxis::Z, false);
-			//AddInstanceComponent(SplineMesh);
 
 			Twig.Scale = std::min(std::max(MinTwigScale, Node->DistanceFromFurthestTip * TwigScalePerSegment), 1.f);
 
@@ -411,7 +339,7 @@ void ATreeGen::GenerateTwig(TSharedPtr<FGraphNode> Node)
 			SplineMesh->SetStartScale(FVector2D(Twig.Scale));
 			SplineMesh->SetEndScale(FVector2D(Twig.Scale));
 
-			TreeMeshes.Add(SplineMesh);
+			SpawnedTwigMeshes.Add(SplineMesh);
 		}
 	}
 }

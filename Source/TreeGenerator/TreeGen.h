@@ -32,14 +32,12 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	USplineComponent* Spline;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Tree")
 	bool bShowDebug = false;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Tree")
 	bool bUseRandom = false;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Twig")
 	bool bMakeTwigs = false;
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
-	bool bUseAsync = false;
 
 	// Max amount in degrees to apply random rotation on all axes when going forward.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (ClampMin = 0, ClampMax = 180, UIMin = 0, UIMax = 180), Category = "Tree")
@@ -97,26 +95,22 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Tree")
 	float Angle = 25.f;
 
-	UPROPERTY()
-	float CurrentAngle = 0.f;
-
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Tree")
 	UStaticMesh* MeshForTree;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Twig")
 	TArray<UStaticMesh*> TwigMeshes;
 
 private:
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = true))
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Tree", meta = (AllowPrivateAccess = true))
 	TArray<FBranch> Tree;
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = true))
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Tree", meta = (AllowPrivateAccess = true))
 	TArray<USplineMeshComponent*> TreeMeshes;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = true))
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Twig", meta = (AllowPrivateAccess = true))
 	TArray<USplineMeshComponent*> SpawnedTwigMeshes;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = true))
 	URandomNumberGenerator* RandomNumberGenerator;
-
 	URandomNumberGenerator* TwigRandomNumberGenerator;
 
 	TSharedPtr<FGraphNode> RootNode;

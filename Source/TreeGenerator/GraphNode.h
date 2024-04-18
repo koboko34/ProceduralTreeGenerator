@@ -10,7 +10,6 @@ class FGraphNode : public TSharedFromThis<FGraphNode>
 {
 public:
 	FGraphNode();
-	~FGraphNode();
 
 public:
 	static int MaxIndex;
