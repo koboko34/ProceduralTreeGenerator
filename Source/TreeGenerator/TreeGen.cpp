@@ -4,7 +4,7 @@
 #include "TreeGen.h"
 #include "Components/SplineComponent.h"
 #include "Components/SplineMeshComponent.h"
-#include "Components/HierarchicalInstancedStaticMeshComponent.h" 
+#include "Components/InstancedStaticMeshComponent.h"
 
 #include <stack>
 
@@ -237,6 +237,7 @@ void ATreeGen::GenerateSplines()
 			if (SplineMesh)
 			{
 				SplineMesh->SetMobility(EComponentMobility::Static);
+				SplineMesh->bDisallowNanite = false;
 
 				if (MeshForTree)
 				{
@@ -315,7 +316,7 @@ void ATreeGen::GenerateTwig(TSharedPtr<FGraphNode> Node)
 				return;
 			}
 			
-			UHierarchicalInstancedStaticMeshComponent* Instancer = TwigInstancers[Twig.MeshIndex];
+			UInstancedStaticMeshComponent* Instancer = TwigInstancers[Twig.MeshIndex];
 
 			FTransform TwigTransform = FTransform::Identity;
 			TwigTransform.SetLocation(Twig.Location);
@@ -336,6 +337,7 @@ void ATreeGen::GenerateTwig(TSharedPtr<FGraphNode> Node)
 		if (SplineMesh)
 		{
 			SplineMesh->SetMobility(EComponentMobility::Static);
+			SplineMesh->bDisallowNanite = false;
 
 			if (Twig.TwigMesh)
 			{
@@ -473,8 +475,8 @@ void ATreeGen::SetupInstancers()
 			return;
 		}
 		
-		UHierarchicalInstancedStaticMeshComponent* Instancer = Cast<UHierarchicalInstancedStaticMeshComponent>(AddComponentByClass(
-			UHierarchicalInstancedStaticMeshComponent::StaticClass(),
+		UInstancedStaticMeshComponent* Instancer = Cast<UInstancedStaticMeshComponent>(AddComponentByClass(
+			UInstancedStaticMeshComponent::StaticClass(),
 			false,
 			FTransform::Identity,
 			false)
@@ -483,10 +485,7 @@ void ATreeGen::SetupInstancers()
 		Instancer->SetStaticMesh(Mesh);
 		Instancer->SetMobility(EComponentMobility::Static);
 		Instancer->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-
-		Instancer->bNeverDistanceCull = true;
-		
-		Instancer->SetCullDistances(CullDistance, CullDistance);
+		Instancer->bDisallowNanite = false;
 
 		TwigInstancers.Add(Instancer);
 	}

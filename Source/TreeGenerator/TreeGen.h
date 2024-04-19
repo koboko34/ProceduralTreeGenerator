@@ -115,7 +115,7 @@ private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Twig", meta = (AllowPrivateAccess = true))
 	TArray<USplineMeshComponent*> SpawnedTwigSplineMeshes;
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Twig", meta = (AllowPrivateAccess = true))
-	TArray<UHierarchicalInstancedStaticMeshComponent*> TwigInstancers;
+	TArray<UInstancedStaticMeshComponent*> TwigInstancers;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = true))
 	URandomNumberGenerator* RandomNumberGenerator;
