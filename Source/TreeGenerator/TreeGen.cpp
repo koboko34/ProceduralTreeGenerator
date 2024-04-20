@@ -5,6 +5,7 @@
 #include "Components/SplineComponent.h"
 #include "Components/SplineMeshComponent.h"
 #include "Components/InstancedStaticMeshComponent.h"
+#include "Kismet/KismetMathLibrary.h"
 
 #include <stack>
 
@@ -171,18 +172,17 @@ void ATreeGen::GenerateTree()
 				{
 					NodePtr->bHasTwig = true;
 					NodePtr->Twig.Location = Turtle->GetRelativeLocation();
-					NodePtr->Twig.TwigMesh = AssignRandomTwigMesh(); // used for original method, instancing uses mesh index
+					NodePtr->Twig.TwigMesh = AssignRandomTwigMesh();
 					NodePtr->Twig.MeshIndex = AssignRandomTwigMeshIndex();
-					FVector CrossProduct = Turtle->GetForwardVector().Cross(Turtle->GetUpVector());
 
 					std::default_random_engine Engine(TwigRandomNumberGenerator->GenerateNumber());
 					std::uniform_real_distribution<double> Distribution{ 0, 360 };
 					double RotationAngle = Distribution(Engine);
 
+					FVector CrossProduct = Turtle->GetForwardVector().Cross(Turtle->GetUpVector());
 					NodePtr->Twig.Tangent = CrossProduct.RotateAngleAxis(RotationAngle, Turtle->GetForwardVector());
-					NodePtr->Twig.Rotation = FQuat(CrossProduct.ToOrientationRotator());
+					NodePtr->Twig.Rotation = FQuat(UKismetMathLibrary::MakeRotFromZ(NodePtr->Twig.Tangent));
 				}
-
 				Node = NodePtr;
 			}
 			break;
@@ -223,7 +223,6 @@ void ATreeGen::GenerateSplines()
 		}
 		
 		Spline->SetSplinePoints(TransformsToVectors(TempArray), ESplineCoordinateSpace::Local);
-		//Spline->SetSplinePoints(TransformsToVectors(Branch.Points), ESplineCoordinateSpace::Local);
 
 		for (int i = 0; i < Spline->GetNumberOfSplinePoints() - 1; i++)
 		{
@@ -308,6 +307,10 @@ void ATreeGen::GenerateTwig(TSharedPtr<FGraphNode> Node)
 	if (Node->bHasTwig)
 	{
 		FTwig& Twig = Node->Twig;
+		Twig.Scale = std::min(std::max(MinTwigScale, Node->DistanceFromFurthestTip * TwigScalePerSegment), 1.f);
+		float NumA = (TwigRandomNumberGenerator->GenerateNumber() % 6) * 0.1f + 0.5f;
+		float NumB = (TwigRandomNumberGenerator->GenerateNumber() % 6) * 0.1f + 0.5f;
+		float RandomScale = NumA + NumB;
 
 		if (bUseInstancing)
 		{
@@ -317,11 +320,13 @@ void ATreeGen::GenerateTwig(TSharedPtr<FGraphNode> Node)
 			}
 			
 			UInstancedStaticMeshComponent* Instancer = TwigInstancers[Twig.MeshIndex];
+			
+			float Scalar = (Twig.Location + Twig.Tangent * TwigLength * Twig.Scale * RandomScale).Length() / Twig.Location.Length();
 
 			FTransform TwigTransform = FTransform::Identity;
 			TwigTransform.SetLocation(Twig.Location);
 			TwigTransform.SetRotation(Twig.Rotation);
-			TwigTransform.SetScale3D(FVector(Twig.Scale));
+			TwigTransform.SetScale3D(FVector(Scalar));
 
 			int Index = Instancer->AddInstance(TwigTransform);
 			return;
@@ -350,13 +355,6 @@ void ATreeGen::GenerateTwig(TSharedPtr<FGraphNode> Node)
 			}
 
 			SplineMesh->SetForwardAxis(ESplineMeshAxis::Z, false);
-
-			Twig.Scale = std::min(std::max(MinTwigScale, Node->DistanceFromFurthestTip * TwigScalePerSegment), 1.f);
-
-			float NumA = (TwigRandomNumberGenerator->GenerateNumber() % 6) * 0.1f + 0.5f;
-			float NumB = (TwigRandomNumberGenerator->GenerateNumber() % 6) * 0.1f + 0.5f;
-			float RandomScale = NumA + NumB;
-
 			SplineMesh->SetStartAndEnd(
 				Twig.Location,
 				Twig.Tangent,
@@ -380,7 +378,6 @@ void ATreeGen::ClearTree()
 
 void ATreeGen::ClearNodes()
 {
-	// I'm assuming this is calling the destructor implicitly
 	RootNode = MakeShared<FGraphNode>();
 }
 

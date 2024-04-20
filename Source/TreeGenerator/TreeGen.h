@@ -89,10 +89,6 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Twig")
 	int MinDistanceFromTipForTwig = 2;
 
-	// Distance at which to cull twigs.
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Twig")
-	float CullDistance = 3000.f;
-
 	// Length by which each forward step should travel.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Tree")
 	float Length = 50.f;

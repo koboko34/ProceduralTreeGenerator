@@ -18,7 +18,7 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	FQuat Rotation = FQuat::Identity;
 
-	// used by original method, instancing will use a mesh index
+	// used by original method, instancing uses a mesh index
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	UStaticMesh* TwigMesh;
 
