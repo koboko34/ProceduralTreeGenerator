@@ -81,7 +81,7 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Twig")
 	float MinTwigScale = 0.4f;
 
-	// Minimum scale for twigs.
+	// Twig scale growth per segment from branch tip. Clamped between MinTwigScale and 1.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Twig")
 	float TwigScalePerSegment = 0.1f;
 
