@@ -28,9 +28,6 @@ ATreeGen::ATreeGen()
 	SetRootComponent(Root);
 	Turtle = CreateDefaultSubobject<USceneComponent>("Turtle");
 	Turtle->SetupAttachment(RootComponent);
-	Spline = CreateDefaultSubobject<USplineComponent>("Spline");
-	Spline->SetupAttachment(RootComponent);
-	Spline->SetMobility(EComponentMobility::Static);
 
 	LSystem = CreateDefaultSubobject<ULSystem>("LSystem");
 	RandomNumberGenerator = CreateDefaultSubobject<URandomNumberGenerator>("RandomNumberGenerator");
@@ -50,7 +47,7 @@ void ATreeGen::Init()
 	}
 
 	GenerateTree();
-	GenerateSplines();
+	GenerateSplineMeshes();
 	GenerateTwigs();
 }
 
@@ -205,11 +202,21 @@ void ATreeGen::GenerateTree()
 	}
 }
 
-void ATreeGen::GenerateSplines()
+void ATreeGen::GenerateSplineMeshes()
 {
 	// Timer FunctionTimer("GenerateSplines");
-	
-	ClearSplines();
+
+	ClearSplineMeshes();
+
+	USplineComponent* Spline = Cast<USplineComponent>(AddComponentByClass(
+		USplineComponent::StaticClass(),
+		false,
+		FTransform::Identity,
+		false)
+	);
+
+	Spline->SetMobility(EComponentMobility::Static);
+	Spline->SetDrawDebug(false);
 	
 	for (FBranch& Branch : Tree)
 	{
@@ -367,7 +374,6 @@ void ATreeGen::GenerateTwig(TSharedPtr<FGraphNode> Node)
 
 			SpawnedTwigSplineMeshes.Add(SplineMesh);
 		}
-		
 	}
 }
 
@@ -381,7 +387,7 @@ void ATreeGen::ClearNodes()
 	RootNode = MakeShared<FGraphNode>();
 }
 
-void ATreeGen::ClearSplines()
+void ATreeGen::ClearSplineMeshes()
 {
 	if (!TreeMeshes.IsEmpty())
 	{
@@ -394,8 +400,6 @@ void ATreeGen::ClearSplines()
 		}
 		TreeMeshes.Empty();
 	}
-
-	Spline->ClearSplinePoints();
 }
 
 void ATreeGen::ClearTwigs()

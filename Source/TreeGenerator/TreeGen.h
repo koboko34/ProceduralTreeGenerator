@@ -29,9 +29,6 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	ULSystem* LSystem;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	USplineComponent* Spline;
-
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Tree")
 	bool bShowDebug = false;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Tree")
@@ -97,12 +94,12 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Tree")
 	float Angle = 25.f;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Tree")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Tree")
 	UStaticMesh* MeshForTree;
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Twig")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Twig")
 	TArray<UStaticMesh*> TwigMeshes;
 
-private:
+private:	
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Tree", meta = (AllowPrivateAccess = true))
 	TArray<FBranch> Tree;
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Tree", meta = (AllowPrivateAccess = true))
@@ -131,14 +128,14 @@ private:
 	void SetupInstancers();
 
 	void GenerateTree();
-	void GenerateSplines();
+	void GenerateSplineMeshes();
 	void GenerateTwigs();
 
 	void GenerateTwig(TSharedPtr<FGraphNode> Node);
 
 	void ClearTree();
 	void ClearNodes();
-	void ClearSplines();
+	void ClearSplineMeshes();
 	void ClearTwigs();
 
 	void RemoveShortBranches();
