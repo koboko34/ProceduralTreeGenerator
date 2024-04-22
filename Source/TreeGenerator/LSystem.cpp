@@ -36,13 +36,13 @@ void ULSystem::Evolve()
 
 	for (int i = 0; i < CurrentString.Len(); i++)
 	{
-		FString c = CurrentString.Mid(i, 1);
-		if (c == "+" || c == "-" || c == "[" || c == "]")
+		FString Char = CurrentString.Mid(i, 1);
+		if (Char == "+" || Char == "-" || Char == "[" || Char == "]")
 		{
-			NextString.Append(c);
+			NextString.Append(Char);
 			continue;
 		}
-		NextString.Append(ApplyRule(c));
+		NextString.Append(ApplyRule(Char));
 	}
 	CurrentString = NextString;
 }
