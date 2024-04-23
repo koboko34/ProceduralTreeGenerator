@@ -46,6 +46,10 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Tree")
 	int BranchRollMax = 137;
 
+	// Scale at which the tree will begin with.
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Tree")
+	float StartWidthScale = 1.f;
+
 	// Minimum width allowed for branch segments. Each segments smaller than this will not produce a spline mesh.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (ClampMin = 0, ClampMax = 1, UIMin = 0, UIMax = 1), Category = "Tree")
 	float MinWidthScale = 0.1f;

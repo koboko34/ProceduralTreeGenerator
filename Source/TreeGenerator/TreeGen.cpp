@@ -64,6 +64,7 @@ void ATreeGen::GenerateTree()
 	ClearNodes();
 
 	Tree.AddDefaulted();
+	Tree[0].ParentWidthScale = StartWidthScale;
 	Tree[0].Points.Add(Turtle->GetRelativeTransform());
 
 	TSharedPtr<FGraphNode> Node = RootNode;
@@ -75,7 +76,7 @@ void ATreeGen::GenerateTree()
 
 	int OpenBranchesToIgnore = 0;
 	int CurrentBranchIndex = 0;
-	float CurrentWidthScale = 1.f;
+	float CurrentWidthScale = StartWidthScale;
 	float CurrentLengthScale = 1.f;
 	float CurrentTotalLength = -NegativeHeightOffset;
 
@@ -170,7 +171,11 @@ void ATreeGen::GenerateTree()
 					NodePtr->bHasTwig = true;
 					NodePtr->Twig.Location = Turtle->GetRelativeLocation();
 					NodePtr->Twig.TwigMesh = AssignRandomTwigMesh();
-					NodePtr->Twig.MeshIndex = AssignRandomTwigMeshIndex();
+
+					if (bUseInstancing)
+					{
+						NodePtr->Twig.MeshIndex = AssignRandomTwigMeshIndex();
+					}
 
 					std::default_random_engine Engine(TwigRandomNumberGenerator->GenerateNumber());
 					std::uniform_real_distribution<double> Distribution{ 0, 360 };
@@ -188,7 +193,7 @@ void ATreeGen::GenerateTree()
 		}
 	}
 
-	RemoveShortBranches(); // this might cause some problems
+	RemoveShortBranches();
 
 	if (bShowDebug)
 	{
@@ -288,6 +293,8 @@ void ATreeGen::GenerateSplineMeshes()
 
 void ATreeGen::GenerateTwigs()
 {
+	ClearTwigs();
+
 	if (!bMakeTwigs)
 	{
 		return;
@@ -295,7 +302,6 @@ void ATreeGen::GenerateTwigs()
 	
 	// Timer FunctionTimer("GenerateTwigs");
 	
-	ClearTwigs();
 	RootNode->CalculateDistanceFromTip(MinDistanceFromTipForTwig); // also disables twigs on branch tips
 
 	for (const TSharedPtr<FGraphNode> Node : RootNode->ChildNodes)
