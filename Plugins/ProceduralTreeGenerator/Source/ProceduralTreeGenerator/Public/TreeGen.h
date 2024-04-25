@@ -58,6 +58,10 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Tree")
 	float WidthScaleFactor = 0.9f;
 
+	// Scale at which branch tips will terminate at.
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Tree")
+	float BranchTipScale = 0.05f;
+
 	// Scales width by this amount when creating new branch.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Tree")
 	float BranchingWidthScaleFactor = 0.5f;

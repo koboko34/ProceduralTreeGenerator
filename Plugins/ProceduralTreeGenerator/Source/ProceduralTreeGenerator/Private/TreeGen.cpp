@@ -52,9 +52,7 @@ void ATreeGen::Init()
 }
 
 void ATreeGen::GenerateTree()
-{
-	// Timer FunctionTimer("GenerateTree()");
-	
+{	
 	float NegativeHeightOffset = Length + 10;
 	Turtle->SetRelativeLocationAndRotation(FVector::ZeroVector, FRotator::ZeroRotator);
 	Turtle->AddLocalRotation(FRotator(90.f, 0.f, 0.f));
@@ -209,8 +207,6 @@ void ATreeGen::GenerateTree()
 
 void ATreeGen::GenerateSplineMeshes()
 {
-	// Timer FunctionTimer("GenerateSplines");
-
 	ClearSplineMeshes();
 
 	USplineComponent* Spline = Cast<USplineComponent>(AddComponentByClass(
@@ -271,12 +267,12 @@ void ATreeGen::GenerateSplineMeshes()
 				if (i == Spline->GetNumberOfSplinePoints() - 3)
 				{
 					SplineMesh->SetStartScale(FVector2D(CurrentWidthScale));
-					SplineMesh->SetEndScale(FVector2D(CurrentWidthScale / 2.f));
+					SplineMesh->SetEndScale(FVector2D((CurrentWidthScale + BranchTipScale) / 2.f));
 				}
 				else if (i == Spline->GetNumberOfSplinePoints() - 2)
 				{
-					SplineMesh->SetStartScale(FVector2D(CurrentWidthScale / 2.f));
-					SplineMesh->SetEndScale(FVector2D(0.f));
+					SplineMesh->SetStartScale(FVector2D((CurrentWidthScale + BranchTipScale) / 2.f));
+					SplineMesh->SetEndScale(FVector2D(BranchTipScale));
 				}
 				else
 				{
@@ -299,9 +295,7 @@ void ATreeGen::GenerateTwigs()
 	{
 		return;
 	}
-	
-	// Timer FunctionTimer("GenerateTwigs");
-	
+		
 	RootNode->CalculateDistanceFromTip(MinDistanceFromTipForTwig); // also disables twigs on branch tips
 
 	for (const TSharedPtr<FGraphNode> Node : RootNode->ChildNodes)
