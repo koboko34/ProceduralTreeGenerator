@@ -146,6 +146,7 @@ private:
 	void ClearSplineMeshes();
 	void ClearTwigs();
 
+	void TrimToMinBranchWidth();
 	void RemoveShortBranches();
 
 	UStaticMesh* AssignRandomTwigMesh() const;

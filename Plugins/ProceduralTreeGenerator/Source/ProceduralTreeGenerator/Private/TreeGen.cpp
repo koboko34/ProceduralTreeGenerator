@@ -72,7 +72,6 @@ void ATreeGen::GenerateTree()
 		DrawDebugSphere(GetWorld(), Turtle->GetComponentLocation(), 12, 6, FColor::Green, false, 10.f);
 	}
 
-	int OpenBranchesToIgnore = 0;
 	int CurrentBranchIndex = 0;
 	float CurrentWidthScale = StartWidthScale;
 	float CurrentLengthScale = 1.f;
@@ -95,12 +94,6 @@ void ATreeGen::GenerateTree()
 			Turtle->AddLocalRotation(FRotator(0.f, Angle, 0.f));
 			break;
 		case '[':
-			if (CurrentWidthScale < MinWidthScale)
-			{
-				OpenBranchesToIgnore++;
-				break;
-			}
-			
 			if (bUseRandom && BranchRollMax != 0)
 			{
 				int RandBranchRoll = (RandomNumberGenerator->GenerateNumber() % BranchRollMax) * 2 - BranchRollMax;
@@ -123,12 +116,6 @@ void ATreeGen::GenerateTree()
 			NodeStack.push(Node);
 			break;
 		case ']':
-			if (CurrentWidthScale < MinWidthScale && OpenBranchesToIgnore > 0)
-			{
-				OpenBranchesToIgnore--;
-				break;
-			}
-			
 			Turtle->SetRelativeTransform(Tree[CurrentBranchIndex].Points[0]);
 			CurrentWidthScale = Tree[CurrentBranchIndex].ParentWidthScale;
 			CurrentLengthScale = Tree[CurrentBranchIndex].ParentLengthScale;
@@ -141,11 +128,6 @@ void ATreeGen::GenerateTree()
 			NodeStack.pop();
 			break;
 		case 'F':
-			if (CurrentWidthScale < MinWidthScale)
-			{
-				break;
-			}
-			
 			Turtle->AddRelativeLocation(Turtle->GetForwardVector() * Length * CurrentLengthScale);
 			Tree[CurrentBranchIndex].Points.Add(Turtle->GetRelativeTransform());
 			CurrentWidthScale *= WidthScaleFactor;
@@ -191,6 +173,7 @@ void ATreeGen::GenerateTree()
 		}
 	}
 
+	TrimToMinBranchWidth();
 	RemoveShortBranches();
 
 	if (bShowDebug)
@@ -412,6 +395,40 @@ void ATreeGen::ClearTwigs()
 		}
 	}
 	SpawnedTwigSplineMeshes.Empty();
+}
+
+void ATreeGen::TrimToMinBranchWidth()
+{
+	if (Tree.Num() < 1)
+	{
+		return;
+	}
+
+	TArray<int> BranchesToDelete;
+	for (int i = 0; i < Tree.Num(); i++)
+	{
+		if (Tree[i].ParentWidthScale < MinWidthScale)
+		{
+			BranchesToDelete.Add(i);
+			continue;
+		}
+
+		float Width = Tree[i].ParentWidthScale;
+		for (int j = 1; j < Tree[i].Points.Num(); j++)
+		{
+			Width *= WidthScaleFactor;
+			if (Width < MinWidthScale)
+			{
+				Tree[i].Points.SetNum(j);
+				break;
+			}
+		}
+	}
+
+	for (int i = BranchesToDelete.Num() - 1; i >= 0; i--)
+	{
+		Tree.RemoveAt(i);
+	}
 }
 
 void ATreeGen::RemoveShortBranches()
